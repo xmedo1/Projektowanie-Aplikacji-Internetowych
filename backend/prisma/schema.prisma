@@ -1,8 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
   provider = "prisma-client"
   output   = "../generated/prisma"
@@ -10,4 +5,55 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+}
+
+model User {
+  id           Int               @id @default(autoincrement())
+  email        String            @unique
+  passwordHash String
+  firstName    String
+  reservations SeatReservation[]
+  createdAt    DateTime          @default(now())
+}
+
+model Movie {
+  id              Int         @id @default(autoincrement())
+  title           String
+  durationMinutes Int
+  screenings      Screening[]
+}
+
+model Screening {
+  id           Int               @id @default(autoincrement())
+  startTime    DateTime
+  roomName     String
+  ticketPrice  Int
+  movieId      Int
+  movie        Movie             @relation(fields: [movieId], references: [id])
+  reservations SeatReservation[]
+}
+
+model SeatReservation {
+  id          Int               @id @default(autoincrement())
+  seatRow     String
+  seatNumber  Int
+  status      ReservationStatus
+  ticketType  TicketType
+  userId      Int
+  user        User              @relation(fields: [userId], references: [id])
+  screeningId Int
+  screening   Screening         @relation(fields: [screeningId], references: [id])
+  createdAt   DateTime          @default(now())
+
+  @@unique([screeningId, seatRow, seatNumber])
+}
+
+enum ReservationStatus {
+  LOCKED // rezerwacja
+  BOOKED // opłacone
+}
+
+enum TicketType {
+  REGULAR // normalny
+  STUDENT // ulgowy
 }
