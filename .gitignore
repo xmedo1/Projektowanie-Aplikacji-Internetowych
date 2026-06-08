@@ -1,0 +1,4 @@
+ADR.odt
+backend/node_modules
+backend/.env
+backend/generated/prisma
