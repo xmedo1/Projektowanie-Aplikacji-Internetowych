@@ -4,6 +4,7 @@ import { prisma } from './db.js';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { authenticateToken, AuthRequest } from './middleware/auth.js';
+import { z } from 'zod';
 
 const app = express();
 const PORT = 3000;
@@ -16,6 +17,24 @@ if (!JWT_SECRET) {
 
 app.use(cors());
 app.use(express.json());
+
+const registerSchema = z.object({
+  email: z.email({ error: 'Invalid email format' }),
+
+  password: z
+    .string({ error: 'Password is required' })
+    .min(8, { error: 'Password must be at least 8 characters long' }),
+
+  firstName: z
+    .string({ error: 'First name is required' })
+    .min(2, { error: 'First name must be at least 2 characters long' }),
+});
+
+const loginSchema = z.object({
+  email: z.email({ error: 'Invalid email format' }),
+
+  password: z.string({ error: 'Password is required' }).min(1, { error: 'Password is required' }),
+});
 
 app.get('/api/movies', async (_req, res) => {
   try {
@@ -110,11 +129,16 @@ app.post('/api/reservations', authenticateToken, async (req: AuthRequest, res) =
 
 app.post('/api/auth/register', async (req, res) => {
   try {
-    const { email, password, firstName } = req.body;
+    const validation = registerSchema.safeParse(req.body);
 
-    if (!email || !password || !firstName) {
-      return res.status(400).json({ error: 'Missing required fields' });
+    if (!validation.success) {
+      return res.status(400).json({
+        error: 'Validation failed',
+        details: validation.error.issues.map((issue) => issue.message),
+      });
     }
+
+    const { email, password, firstName } = validation.data;
 
     const existingUser = await prisma.user.findUnique({
       where: { email },
@@ -149,11 +173,16 @@ app.post('/api/auth/register', async (req, res) => {
 
 app.post('/api/auth/login', async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const validation = loginSchema.safeParse(req.body);
 
-    if (!email || !password) {
-      return res.status(400).json({ error: 'Missing credentials' });
+    if (!validation.success) {
+      return res.status(400).json({
+        error: 'Validation failed',
+        details: validation.error.issues.map((issue) => issue.message),
+      });
     }
+
+    const { email, password } = validation.data;
 
     const user = await prisma.user.findUnique({
       where: { email },
