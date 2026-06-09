@@ -7,7 +7,7 @@ async function main() {
   const user = await prisma.user.create({
     data: {
       email: 'jankowalski@example.com',
-      passwordHash: 'password', // roboczo jawnie podane hasło
+      passwordHash: '$2b$10$x2PyC.TpS4YNQm26OT5.x..buaSG4jprk.huasXjY4sTI4kl019LK', // hasło: "password" + salt
       firstName: 'Jan',
     },
   });

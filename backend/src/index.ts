@@ -1,9 +1,17 @@
 import express from 'express';
 import cors from 'cors';
 import { prisma } from './db.js';
+import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
 
 const app = express();
 const PORT = 3000;
+const JWT_SECRET = process.env.JWT_SECRET;
+
+if (!JWT_SECRET) {
+  console.error('Error: JWT_SECRET is not defined.');
+  process.exit(1);
+}
 
 app.use(cors());
 app.use(express.json());
@@ -94,6 +102,83 @@ app.post('/api/reservations', async (req, res) => {
       return res.status(409).json({ error: 'This seat is already taken' });
     }
 
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+app.post('/api/auth/register', async (req, res) => {
+  try {
+    const { email, password, firstName } = req.body;
+
+    if (!email || !password || !firstName) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    const existingUser = await prisma.user.findUnique({
+      where: { email },
+    });
+
+    if (existingUser) {
+      return res.status(409).json({ error: 'Email is already in use' });
+    }
+
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+    const newUser = await prisma.user.create({
+      data: {
+        email,
+        firstName,
+        passwordHash: hashedPassword,
+      },
+    });
+
+    res.status(201).json({
+      id: newUser.id,
+      email: newUser.email,
+      firstName: newUser.firstName,
+      createdAt: newUser.createdAt,
+    });
+  } catch (error) {
+    console.error('Registration error:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+app.post('/api/auth/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Missing credentials' });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { email },
+    });
+
+    if (!user) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
+
+    if (!isPasswordValid) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '7d' });
+
+    res.json({
+      token,
+      user: {
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+      },
+    });
+  } catch (error) {
+    console.error('Login error:', error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
