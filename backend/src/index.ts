@@ -3,6 +3,7 @@ import cors from 'cors';
 import { prisma } from './db.js';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import { authenticateToken, AuthRequest } from './middleware/auth.js';
 
 const app = express();
 const PORT = 3000;
@@ -74,11 +75,12 @@ app.get('/api/screenings/:id', async (req, res) => {
   }
 });
 
-app.post('/api/reservations', async (req, res) => {
+app.post('/api/reservations', authenticateToken, async (req: AuthRequest, res) => {
   try {
-    const { screeningId, seatRow, seatNumber, ticketType, userId } = req.body;
+    const { screeningId, seatRow, seatNumber, ticketType } = req.body;
+    const currentUserId = req.userId;
 
-    if (!screeningId || !seatRow || !seatNumber || !ticketType || !userId) {
+    if (!screeningId || !seatRow || !seatNumber || !ticketType) {
       return res.status(400).json({ error: 'Missing reservation data' });
     }
 
@@ -88,7 +90,7 @@ app.post('/api/reservations', async (req, res) => {
         seatRow,
         seatNumber: parseInt(seatNumber),
         ticketType,
-        userId: parseInt(userId),
+        userId: currentUserId as number,
         status: 'LOCKED',
       },
     });
