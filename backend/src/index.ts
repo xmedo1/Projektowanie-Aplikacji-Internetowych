@@ -36,6 +36,26 @@ const loginSchema = z.object({
   password: z.string({ error: 'Password is required' }).min(1, { error: 'Password is required' }),
 });
 
+const reservationSchema = z.object({
+  screeningId: z
+    .number({ error: 'Screening ID must be a number' })
+    .int({ error: 'Screening ID must be an integer' })
+    .positive({ error: 'Screening ID must be positive' }),
+
+  seatRow: z
+    .string({ error: 'Seat row is required' })
+    .min(1, { error: 'Seat row cannot be empty' }),
+
+  seatNumber: z
+    .number({ error: 'Seat number must be a number' })
+    .int({ error: 'Seat number must be an integer' })
+    .positive({ error: 'Seat number must be positive' }),
+
+  ticketType: z.enum(['REGULAR', 'STUDENT'], {
+    error: 'Invalid ticket type. Allowed: REGULAR, STUDENT',
+  }),
+});
+
 app.get('/api/movies', async (_req, res) => {
   try {
     const movies = await prisma.movie.findMany();
@@ -96,18 +116,23 @@ app.get('/api/screenings/:id', async (req, res) => {
 
 app.post('/api/reservations', authenticateToken, async (req: AuthRequest, res) => {
   try {
-    const { screeningId, seatRow, seatNumber, ticketType } = req.body;
-    const currentUserId = req.userId;
+    const validation = reservationSchema.safeParse(req.body);
 
-    if (!screeningId || !seatRow || !seatNumber || !ticketType) {
-      return res.status(400).json({ error: 'Missing reservation data' });
+    if (!validation.success) {
+      return res.status(400).json({
+        error: 'Validation failed',
+        details: validation.error.issues.map((issue) => issue.message),
+      });
     }
+
+    const { screeningId, seatRow, seatNumber, ticketType } = validation.data;
+    const currentUserId = req.userId;
 
     const reservation = await prisma.seatReservation.create({
       data: {
-        screeningId: parseInt(screeningId),
+        screeningId,
         seatRow,
-        seatNumber: parseInt(seatNumber),
+        seatNumber,
         ticketType,
         userId: currentUserId as number,
         status: 'LOCKED',
