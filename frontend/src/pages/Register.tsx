@@ -1,22 +1,22 @@
-import { Link, useNavigate } from "react-router-dom";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import AuthLayout from "../components/AuthLayout";
-import Input from "../components/Input";
-import Button from "../components/Button";
-import api from "../services/api";
+import { Link, useNavigate } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import AuthLayout from '../components/AuthLayout';
+import Input from '../components/Input';
+import Button from '../components/Button';
+import api from '../services/api';
 
 const registerSchema = z.object({
-  email: z.email({ error: "Niepoprawny format e-maila" }),
+  email: z.email({ error: 'Niepoprawny format e-maila' }),
 
   password: z
-    .string({ error: "Hasło jest wymagane" })
-    .min(8, { error: "Hasło musi mieć minimum 8 znaków" }),
+    .string({ error: 'Hasło jest wymagane' })
+    .min(8, { error: 'Hasło musi mieć minimum 8 znaków' }),
 
   firstName: z
-    .string({ error: "Imię jest wymagane" })
-    .min(2, { error: "Imię musi mieć minimum 2 znaki" }),
+    .string({ error: 'Imię jest wymagane' })
+    .min(2, { error: 'Imię musi mieć minimum 2 znaki' }),
 });
 
 type RegisterFormInputs = z.infer<typeof registerSchema>;
@@ -34,15 +34,15 @@ export default function Register() {
 
   const onSubmit = async (data: RegisterFormInputs) => {
     try {
-      const response = await api.post("/auth/register", data);
+      const response = await api.post('/auth/register', data);
 
-      console.log("Zarejestrowano pomyślnie:", response.data); // testy
-      alert("Konto stworzone pomyślnie! Teraz możesz się zalogować.");
+      console.log('Zarejestrowano pomyślnie:', response.data); // testy
+      alert('Konto stworzone pomyślnie! Teraz możesz się zalogować.');
 
-      navigate("/login");
+      navigate('/login');
     } catch (error: any) {
-      console.error("Błąd rejestracji:", error.response?.data || error.message);
-      alert(error.response?.data?.message || "Nie udało się stworzyć konta.");
+      console.error('Błąd rejestracji:', error.response?.data || error.message);
+      alert(error.response?.data?.message || 'Nie udało się stworzyć konta.');
     }
   };
 
@@ -53,28 +53,28 @@ export default function Register() {
           label="Imię"
           type="text"
           error={errors.firstName?.message}
-          {...register("firstName")}
+          {...register('firstName')}
         />
 
         <Input
           label="Adres e-mail"
           type="email"
           error={errors.email?.message}
-          {...register("email")}
+          {...register('email')}
         />
 
         <Input
           label="Hasło"
           type="password"
           error={errors.password?.message}
-          {...register("password")}
+          {...register('password')}
         />
 
         <Button type="submit">Stwórz konto</Button>
       </form>
 
       <p className="mt-6 text-center text-sm text-gray-400">
-        Masz już konto?{" "}
+        Masz już konto?{' '}
         <Link to="/login" className="text-green-400 hover:underline">
           Zaloguj się
         </Link>

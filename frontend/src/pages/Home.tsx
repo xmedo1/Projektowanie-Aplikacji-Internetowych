@@ -1,13 +1,13 @@
-import { useNavigate } from "react-router-dom";
-import Button from "../components/Button";
-import AuthLayout from "../components/AuthLayout";
+import { useNavigate } from 'react-router-dom';
+import Button from '../components/Button';
+import AuthLayout from '../components/AuthLayout';
 
 export default function Home() {
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    navigate("/login");
+    localStorage.removeItem('token');
+    navigate('/login');
   };
 
   return (

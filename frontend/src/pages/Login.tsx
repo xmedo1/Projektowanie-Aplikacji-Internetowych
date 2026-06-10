@@ -1,18 +1,16 @@
-import { Link, useNavigate } from "react-router-dom";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import AuthLayout from "../components/AuthLayout";
-import Input from "../components/Input";
-import Button from "../components/Button";
-import api from "../services/api";
+import { Link, useNavigate } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import AuthLayout from '../components/AuthLayout';
+import Input from '../components/Input';
+import Button from '../components/Button';
+import api from '../services/api';
 
 const loginSchema = z.object({
-  email: z.email({ error: "Niepoprawny format e-maila" }),
+  email: z.email({ error: 'Niepoprawny format e-maila' }),
 
-  password: z
-    .string({ error: "Hasło jest wymagane" })
-    .min(1, { error: "Hasło jest wymagane" }),
+  password: z.string({ error: 'Hasło jest wymagane' }).min(1, { error: 'Hasło jest wymagane' }),
 });
 
 type LoginFormInputs = z.infer<typeof loginSchema>;
@@ -30,14 +28,14 @@ export default function Login() {
 
   const onSubmit = async (data: LoginFormInputs) => {
     try {
-      const response = await api.post("/auth/login", data);
+      const response = await api.post('/auth/login', data);
       const { token } = response.data;
 
-      localStorage.setItem("token", token); // todo
+      localStorage.setItem('token', token); // todo
 
-      navigate("/"); // todo
+      navigate('/'); // todo
     } catch (error: any) {
-      alert(error.response?.data?.message || "Błąd logowania.");
+      alert(error.response?.data?.message || 'Błąd logowania.');
     }
   };
 
@@ -49,7 +47,7 @@ export default function Login() {
           type="email"
           placeholder="jankowalski@example.com"
           error={errors.email?.message}
-          {...register("email")}
+          {...register('email')}
         />
 
         <Input
@@ -57,14 +55,14 @@ export default function Login() {
           type="password"
           placeholder="password"
           error={errors.password?.message}
-          {...register("password")}
+          {...register('password')}
         />
 
         <Button type="submit">Zaloguj się</Button>
       </form>
 
       <p className="mt-6 text-center text-sm text-gray-400">
-        Nie masz jeszcze konta?{" "}
+        Nie masz jeszcze konta?{' '}
         <Link to="/register" className="text-green-400 hover:underline">
           Zarejestruj się
         </Link>
