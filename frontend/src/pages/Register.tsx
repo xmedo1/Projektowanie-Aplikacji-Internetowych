@@ -1,10 +1,11 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import AuthLayout from "../components/AuthLayout";
 import Input from "../components/Input";
 import Button from "../components/Button";
+import api from "../services/api";
 
 const registerSchema = z.object({
   email: z.email({ error: "Niepoprawny format e-maila" }),
@@ -21,6 +22,8 @@ const registerSchema = z.object({
 type RegisterFormInputs = z.infer<typeof registerSchema>;
 
 export default function Register() {
+  const navigate = useNavigate();
+
   const {
     register,
     handleSubmit,
@@ -29,8 +32,18 @@ export default function Register() {
     resolver: zodResolver(registerSchema),
   });
 
-  const onSubmit = (data: RegisterFormInputs) => {
-    console.log("Poprawne dane:", data);
+  const onSubmit = async (data: RegisterFormInputs) => {
+    try {
+      const response = await api.post("/auth/register", data);
+
+      console.log("Zarejestrowano pomyślnie:", response.data); // testy
+      alert("Konto stworzone pomyślnie! Teraz możesz się zalogować.");
+
+      navigate("/login");
+    } catch (error: any) {
+      console.error("Błąd rejestracji:", error.response?.data || error.message);
+      alert(error.response?.data?.message || "Nie udało się stworzyć konta.");
+    }
   };
 
   return (

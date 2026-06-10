@@ -1,10 +1,11 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import AuthLayout from "../components/AuthLayout";
 import Input from "../components/Input";
 import Button from "../components/Button";
+import api from "../services/api";
 
 const loginSchema = z.object({
   email: z.email({ error: "Niepoprawny format e-maila" }),
@@ -17,6 +18,8 @@ const loginSchema = z.object({
 type LoginFormInputs = z.infer<typeof loginSchema>;
 
 export default function Login() {
+  const navigate = useNavigate();
+
   const {
     register,
     handleSubmit,
@@ -25,8 +28,17 @@ export default function Login() {
     resolver: zodResolver(loginSchema),
   });
 
-  const onSubmit = (data: LoginFormInputs) => {
-    console.log("Poprawne dane:", data);
+  const onSubmit = async (data: LoginFormInputs) => {
+    try {
+      const response = await api.post("/auth/login", data);
+      const { token } = response.data;
+
+      localStorage.setItem("token", token); // todo
+
+      navigate("/"); // todo
+    } catch (error: any) {
+      alert(error.response?.data?.message || "Błąd logowania.");
+    }
   };
 
   return (
