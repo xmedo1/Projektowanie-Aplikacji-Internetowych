@@ -1,0 +1,25 @@
+{
+  "name": "pai",
+  "version": "1.0.0",
+  "description": "Projekt na zaliczenie przedmiotu Projektowanie Aplikacji Internetowych w semestrze letnim 2025/26.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prepare": "husky"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/xmedo1/Projektowanie-Aplikacji-Internetowych.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/xmedo1/Projektowanie-Aplikacji-Internetowych/issues"
+  },
+  "homepage": "https://github.com/xmedo1/Projektowanie-Aplikacji-Internetowych#readme",
+  "devDependencies": {
+    "husky": "^9.1.7"
+  }
+}
