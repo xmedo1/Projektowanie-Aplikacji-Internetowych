@@ -5,6 +5,8 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { authenticateToken, AuthRequest } from './middleware/auth.js';
 import { z } from 'zod';
+import dotenv from 'dotenv';
+dotenv.config({ path: '../.env' });
 
 const app = express();
 const PORT = 3000;
