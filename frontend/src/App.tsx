@@ -5,6 +5,8 @@ import Home from './pages/Home';
 import { AuthProvider } from './context/AuthProvider';
 import Profile from './pages/Profile';
 import ProtectedRoute from './components/ProtectedRoute';
+import Reservation from './pages/Reservation';
+import MovieDetails from './pages/MovieDetails';
 
 function App() {
   return (
@@ -19,6 +21,15 @@ function App() {
             element={
               <ProtectedRoute>
                 <Profile />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="/movie/:id" element={<MovieDetails />} />
+          <Route
+            path="/reservation/:id"
+            element={
+              <ProtectedRoute>
+                <Reservation />
               </ProtectedRoute>
             }
           />
