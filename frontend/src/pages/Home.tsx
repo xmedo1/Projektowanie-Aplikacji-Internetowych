@@ -105,12 +105,7 @@ export default function Home() {
                   <div className="mb-5 flex aspect-[2/3] w-full items-center justify-center rounded-lg bg-input text-fg-muted">
                     <span className="text-sm">Brak plakatu (todo)</span>
                   </div>
-                  <h2
-                    className="mb-2 text-xl font-bold text-fg-default line-clamp-1"
-                    title={movie.title}
-                  >
-                    {movie.title}
-                  </h2>
+                  <h2 className="mb-2 text-xl font-bold text-fg-default">{movie.title}</h2>
                   <p className="text-sm text-fg-muted">Czas trwania: {movie.durationMinutes} min</p>
                 </div>
                 <Link
