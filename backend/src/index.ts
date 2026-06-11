@@ -6,6 +6,7 @@ import jwt from 'jsonwebtoken';
 import { authenticateToken, AuthRequest } from './middleware/auth.js';
 import { z } from 'zod';
 import dotenv from 'dotenv';
+import cookieParser from 'cookie-parser';
 dotenv.config({ path: '../.env' });
 
 const app = express();
@@ -17,8 +18,14 @@ if (!JWT_SECRET) {
   process.exit(1);
 }
 
-app.use(cors());
+app.use(
+  cors({
+    origin: 'http://localhost:5173',
+    credentials: true,
+  }),
+);
 app.use(express.json());
+app.use(cookieParser());
 
 const registerSchema = z.object({
   email: z.email({ error: 'Invalid email format' }),
@@ -227,16 +234,41 @@ app.post('/api/auth/login', async (req, res) => {
 
     const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '7d' });
 
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 dni w ms
+    });
+
     res.json({
-      token,
-      user: {
-        id: user.id,
-        email: user.email,
-        firstName: user.firstName,
-      },
+      user: { id: user.id, email: user.email, firstName: user.firstName },
     });
   } catch (error) {
     console.error('Login error:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+app.post('/api/auth/logout', (_req, res) => {
+  res.clearCookie('token');
+  res.json({ message: 'Wylogowano pomyślnie' });
+});
+
+app.get('/api/auth/me', authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: req.userId as number },
+      select: { id: true, email: true, firstName: true },
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    res.json(user);
+  } catch (error) {
+    console.error('Error fetching user:', error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });

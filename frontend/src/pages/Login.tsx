@@ -7,6 +7,7 @@ import Input from '../components/Input';
 import Button from '../components/Button';
 import api from '../services/api';
 import { isAxiosError } from 'axios';
+import { useAuth } from '../context/AuthContext';
 
 const loginSchema = z.object({
   email: z.email({ error: 'Niepoprawny format e-maila' }),
@@ -27,17 +28,16 @@ export default function Login() {
     resolver: zodResolver(loginSchema),
   });
 
+  const { refreshUser } = useAuth();
+
   const onSubmit = async (data: LoginFormInputs) => {
     try {
-      const response = await api.post('/auth/login', data);
-      const { token } = response.data;
-
-      localStorage.setItem('token', token); // todo
-
-      navigate('/'); // todo
+      await api.post('/auth/login', data);
+      await refreshUser();
+      navigate('/');
     } catch (error) {
       if (isAxiosError(error)) {
-        alert(error.response?.data?.message || 'Błąd logowania.');
+        alert(error.response?.data?.error || 'Błąd logowania.');
       } else {
         alert('Wystąpił nieznany błąd.');
       }
