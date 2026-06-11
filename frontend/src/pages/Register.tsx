@@ -6,6 +6,7 @@ import AuthLayout from '../components/AuthLayout';
 import Input from '../components/Input';
 import Button from '../components/Button';
 import api from '../services/api';
+import { isAxiosError } from 'axios';
 
 const registerSchema = z.object({
   email: z.email({ error: 'Niepoprawny format e-maila' }),
@@ -40,9 +41,12 @@ export default function Register() {
       alert('Konto stworzone pomyślnie! Teraz możesz się zalogować.');
 
       navigate('/login');
-    } catch (error: any) {
-      console.error('Błąd rejestracji:', error.response?.data || error.message);
-      alert(error.response?.data?.message || 'Nie udało się stworzyć konta.');
+    } catch (error) {
+      if (isAxiosError(error)) {
+        alert(error.response?.data?.message || 'Błąd rejestracji.');
+      } else {
+        alert('Wystąpił nieznany błąd.');
+      }
     }
   };
 
