@@ -6,6 +6,7 @@ import AuthLayout from '../components/AuthLayout';
 import Input from '../components/Input';
 import Button from '../components/Button';
 import api from '../services/api';
+import { isAxiosError } from 'axios';
 
 const loginSchema = z.object({
   email: z.email({ error: 'Niepoprawny format e-maila' }),
@@ -34,8 +35,12 @@ export default function Login() {
       localStorage.setItem('token', token); // todo
 
       navigate('/'); // todo
-    } catch (error: any) {
-      alert(error.response?.data?.message || 'Błąd logowania.');
+    } catch (error) {
+      if (isAxiosError(error)) {
+        alert(error.response?.data?.message || 'Błąd logowania.');
+      } else {
+        alert('Wystąpił nieznany błąd.');
+      }
     }
   };
 
