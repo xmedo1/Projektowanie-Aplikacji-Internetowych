@@ -102,9 +102,15 @@ export default function Home() {
                 className="flex flex-col justify-between rounded-xl bg-card p-5 shadow-xl transition-transform hover:-translate-y-2"
               >
                 <div>
-                  <div className="mb-5 flex aspect-[2/3] w-full items-center justify-center rounded-lg bg-input text-fg-muted">
-                    <span className="text-sm">Brak plakatu (todo)</span>
-                  </div>
+                  <img
+                    src={`/posters/${movie.id}.jpg`}
+                    alt={`Plakat filmu ${movie.title}`}
+                    className="mb-5 aspect-[2/3] w-full rounded-lg object-cover shadow-lg"
+                    onError={(e) => {
+                      e.currentTarget.onerror = null;
+                      e.currentTarget.src = '/posters/no_poster.png';
+                    }}
+                  />
                   <h2 className="mb-2 text-xl font-bold text-fg-default">{movie.title}</h2>
                   <p className="text-sm text-fg-muted">Czas trwania: {movie.durationMinutes} min</p>
                 </div>
