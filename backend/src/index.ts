@@ -65,6 +65,17 @@ const reservationSchema = z.object({
   }),
 });
 
+const updateProfileSchema = z.object({
+  email: z.email({ error: 'Invalid email format' }).optional(),
+
+  password: z.string().min(8, { error: 'Password must be at least 8 characters long' }).optional(),
+
+  firstName: z
+    .string({ error: 'First name must be a string' })
+    .min(2, { error: 'First name must be at least 2 characters long' })
+    .optional(),
+});
+
 app.get('/api/movies', async (_req, res) => {
   try {
     const movies = await prisma.movie.findMany();
@@ -269,6 +280,78 @@ app.get('/api/auth/me', authenticateToken, async (req: AuthRequest, res) => {
     res.json(user);
   } catch (error) {
     console.error('Error fetching user:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+app.get('/api/auth/my-reservations', authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    const reservations = await prisma.seatReservation.findMany({
+      where: { userId: req.userId as number },
+      include: {
+        screening: {
+          include: {
+            movie: true,
+          },
+        },
+      },
+      orderBy: {
+        screening: {
+          startTime: 'desc',
+        },
+      },
+    });
+
+    res.json(reservations);
+  } catch (error) {
+    console.error('Error fetching user reservations:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+app.put('/api/auth/update-profile', authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    const validation = updateProfileSchema.safeParse(req.body);
+
+    if (!validation.success) {
+      return res.status(400).json({
+        error: 'Validation failed',
+        details: validation.error.issues.map((issue) => issue.message),
+      });
+    }
+
+    const { firstName, email, password } = validation.data;
+    const userId = req.userId as number;
+
+    const updateData: any = {};
+
+    if (firstName) updateData.firstName = firstName;
+
+    if (email) {
+      const existingUser = await prisma.user.findUnique({ where: { email } });
+      if (existingUser && existingUser.id !== userId) {
+        return res.status(409).json({ error: 'Email is already in use' });
+      }
+      updateData.email = email;
+    }
+
+    if (password) {
+      const saltRounds = 10;
+      updateData.passwordHash = await bcrypt.hash(password, saltRounds);
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: updateData,
+      select: { id: true, email: true, firstName: true },
+    });
+
+    res.json({
+      message: 'Profil zaktualizowany pomyślnie.',
+      user: updatedUser,
+    });
+  } catch (error) {
+    console.error('Error updating profile:', error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });

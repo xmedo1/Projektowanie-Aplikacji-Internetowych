@@ -69,10 +69,20 @@ export default function Home() {
               <>
                 <span className="text-fg-muted">
                   Zalogowano jako:{' '}
-                  <span className="font-bold text-fg-default">{user.firstName}</span>
+                  <button
+                    onClick={() => navigate('/profile')}
+                    className="font-bold text-accent hover:underline"
+                  >
+                    {user.firstName}
+                  </button>
                 </span>
-                <div className="w-32">
-                  <Button onClick={handleLogout}>Wyloguj</Button>
+                <div className="flex gap-4">
+                  <div className="w-32">
+                    <Button onClick={() => navigate('/profile')}>Mój profil</Button>
+                  </div>
+                  <div className="w-32">
+                    <Button onClick={handleLogout}>Wyloguj</Button>
+                  </div>
                 </div>
               </>
             ) : (
