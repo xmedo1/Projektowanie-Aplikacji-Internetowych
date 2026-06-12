@@ -1,8 +1,6 @@
-import { useNavigate, Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import api from '../services/api';
-import Button from '../components/Button';
-import { useAuth } from '../context/AuthContext';
 
 interface Movie {
   id: number;
@@ -14,9 +12,6 @@ export default function Home() {
   const [movies, setMovies] = useState<Movie[]>([]);
   const [loadingMovies, setLoadingMovies] = useState(true);
   const [error, setError] = useState('');
-  const { user, logout } = useAuth();
-
-  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchMovies = async () => {
@@ -33,14 +28,6 @@ export default function Home() {
 
     fetchMovies();
   }, []);
-
-  const handleLogout = async () => {
-    try {
-      await logout();
-    } catch (error) {
-      console.error('Błąd podczas wylogowywania', error);
-    }
-  };
 
   if (loadingMovies) {
     return (
@@ -59,39 +46,11 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-page text-fg-default p-8">
+    <div className="p-8">
       <div className="container mx-auto max-w-6xl">
-        <div className="mb-10 flex items-center justify-between border-b border-input pb-6">
-          <h1 className="text-3xl font-bold text-accent">Repertuar</h1>
-
-          <div className="flex items-center gap-6">
-            {user ? (
-              <>
-                <span className="text-fg-muted">
-                  Zalogowano jako:{' '}
-                  <button
-                    onClick={() => navigate('/profile')}
-                    className="font-bold text-accent hover:underline"
-                  >
-                    {user.firstName}
-                  </button>
-                </span>
-                <div className="flex gap-4">
-                  <div className="w-32">
-                    <Button onClick={() => navigate('/profile')}>Mój profil</Button>
-                  </div>
-                  <div className="w-32">
-                    <Button onClick={handleLogout}>Wyloguj</Button>
-                  </div>
-                </div>
-              </>
-            ) : (
-              <div className="w-32">
-                <Button onClick={() => navigate('/login')}>Zaloguj</Button>
-              </div>
-            )}
-          </div>
-        </div>
+        <h1 className="mb-10 border-b border-input pb-6 text-3xl font-bold text-accent">
+          Repertuar
+        </h1>
         {movies.length === 0 ? (
           <p className="text-center text-fg-muted mt-20 text-lg">Brak filmów w bazie danych.</p>
         ) : (
