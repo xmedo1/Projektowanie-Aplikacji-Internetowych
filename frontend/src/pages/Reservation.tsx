@@ -15,7 +15,7 @@ interface Screening {
 }
 
 const ROWS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
-const SEATS_PER_ROW = 10; // todo: powiększenie okna
+const SEATS_PER_ROW = 20;
 
 export default function Reservation() {
   const { id } = useParams<{ id: string }>();
@@ -77,26 +77,26 @@ export default function Reservation() {
 
   if (loading)
     return (
-      <div className="flex min-h-screen items-center justify-center bg-page text-fg-muted">
+      <div className="flex h-64 items-center justify-center text-fg-muted">
         Ładowanie sali kinowej...
       </div>
     );
   if (error || !screening)
-    return <div className="text-center text-error mt-20">{error || 'Nie znaleziono seansu'}</div>;
+    return <div className="mt-20 text-center text-error">{error || 'Nie znaleziono seansu'}</div>;
 
   return (
-    <div className="min-h-screen bg-page text-fg-default p-8">
-      <div className="container mx-auto max-w-5xl">
+    <div className="p-4 sm:p-8 overflow-x-auto">
+      <div className="mx-auto w-fit min-w-full max-w-none">
         <button
           onClick={() => navigate(-1)}
-          className="mb-6 text-accent hover:underline flex items-center gap-2"
+          className="mb-6 flex items-center gap-2 text-accent hover:underline cursor-pointer"
         >
-          ← Wróć do opisu filmu
+          Wróć do opisu filmu
         </button>
 
-        <div className="mb-8 rounded-xl bg-card p-6 shadow-xl border border-input">
-          <h1 className="text-3xl font-bold text-fg-default mb-2">{screening.movie.title}</h1>
-          <p className="text-accent font-medium text-lg">
+        <div className="mx-auto max-w-5xl mb-8 rounded-xl border border-input bg-card p-6 shadow-xl">
+          <h1 className="mb-2 text-3xl font-bold text-fg-default">{screening.movie.title}</h1>
+          <p className="text-lg font-medium text-accent">
             {new Date(screening.startTime).toLocaleDateString('pl-PL', {
               weekday: 'long',
               day: 'numeric',
@@ -108,12 +108,12 @@ export default function Reservation() {
               minute: '2-digit',
             })}
           </p>
-          <p className="text-fg-muted mt-1">Sala: {screening.roomName}</p>
+          <p className="mt-1 text-fg-muted">Sala: {screening.roomName}</p>
         </div>
 
-        <div className="flex flex-col lg:flex-row gap-12">
-          <div className="flex-1 rounded-xl bg-card p-8 shadow-xl flex flex-col items-center overflow-x-auto">
-            <div className="w-3/4 h-8 bg-fg-muted/20 rounded-t-3xl mb-12 flex items-center justify-center text-sm font-bold text-fg-muted shadow-[0_20px_20px_rgba(255,255,255,0.05)]">
+        <div className="flex flex-col items-center justify-center gap-12 xl:flex-row xl:items-start">
+          <div className="flex w-fit flex-col items-center rounded-xl bg-card p-8 shadow-xl">
+            <div className="mb-12 flex h-8 w-3/4 items-center justify-center rounded-t-3xl bg-fg-muted/20 text-sm font-bold text-fg-muted shadow-[0_20px_20px_rgba(0,0,0,0.05)]">
               EKRAN
             </div>
 
@@ -133,9 +133,9 @@ export default function Reservation() {
                           disabled={taken}
                           onClick={() => setSelectedSeat({ row, number })}
                           className={`
-                            flex h-10 w-10 items-center justify-center rounded-t-lg rounded-b-sm border text-sm font-bold transition-all
-                            ${taken ? 'border-transparent bg-fg-muted/20 text-fg-muted cursor-not-allowed line-through' : ''}
-                            ${selected ? 'border-accent bg-accent text-fg-on-accent scale-110 shadow-[0_0_10px_var(--color-accent)]' : ''}
+                            flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-b-sm rounded-t-lg border text-sm font-bold transition-all
+                            ${taken ? 'line-through cursor-not-allowed border-transparent bg-fg-muted/20 text-fg-muted' : ''}
+                            ${selected ? 'scale-110 border-accent bg-accent shadow-[0_0_10px_var(--color-accent)] text-fg-on-accent' : ''}
                             ${!taken && !selected ? 'border-transparent bg-input text-fg-default hover:border-accent hover:text-accent' : ''}
                           `}
                         >
@@ -167,26 +167,26 @@ export default function Reservation() {
             </div>
           </div>
 
-          <div className="w-full lg:w-80 h-fit rounded-xl bg-card p-6 shadow-xl border border-input">
-            <h2 className="text-xl font-bold mb-6 border-b border-gray-700 pb-4">Podsumowanie</h2>
+          <div className="h-fit w-full flex-shrink-0 rounded-xl border border-input bg-card p-6 shadow-xl xl:w-80">
+            <h2 className="mb-6 border-b border-input pb-4 text-xl font-bold">Podsumowanie</h2>
 
             <div className="mb-6">
-              <div className="text-sm text-fg-muted mb-1">Wybrane miejsce:</div>
+              <div className="mb-1 text-sm text-fg-muted">Wybrane miejsce:</div>
               {selectedSeat ? (
                 <div className="text-2xl font-bold text-fg-default">
                   Rząd {selectedSeat.row}, Miejsce {selectedSeat.number}
                 </div>
               ) : (
-                <div className="text-lg text-gray-500 italic">Nie wybrano miejsca</div>
+                <div className="text-lg italic text-fg-muted">Nie wybrano miejsca</div>
               )}
             </div>
 
             <div className="mb-8">
-              <div className="text-sm text-fg-muted mb-2">Typ biletu:</div>
+              <div className="mb-2 text-sm text-fg-muted">Typ biletu:</div>
               <select
                 value={ticketType}
                 onChange={(e) => setTicketType(e.target.value as 'REGULAR' | 'STUDENT')}
-                className="w-full bg-input border border-input text-fg-default rounded-lg px-4 py-2 focus:border-accent focus:outline-none"
+                className="w-full rounded-lg border border-input bg-input px-4 py-2 text-fg-default focus:border-accent focus:outline-none"
               >
                 <option value="REGULAR">
                   Normalny ({(screening.ticketPrice / 100).toFixed(2)} zł)
