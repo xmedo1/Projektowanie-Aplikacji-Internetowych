@@ -8,6 +8,7 @@ import Button from '../components/Button';
 import api from '../services/api';
 import { isAxiosError } from 'axios';
 import { useAuth } from '../context/AuthContext';
+import { useNotification } from '../context/NotificationContext';
 
 const loginSchema = z.object({
   email: z.email({ error: 'Niepoprawny format e-maila' }),
@@ -19,6 +20,7 @@ type LoginFormInputs = z.infer<typeof loginSchema>;
 
 export default function Login() {
   const navigate = useNavigate();
+  const { showNotification } = useNotification();
 
   const {
     register,
@@ -37,9 +39,9 @@ export default function Login() {
       navigate('/');
     } catch (error) {
       if (isAxiosError(error)) {
-        alert(error.response?.data?.error || 'Błąd logowania.');
+        showNotification(error.response?.data?.error || 'Błąd logowania.', 'error');
       } else {
-        alert('Wystąpił nieznany błąd.');
+        showNotification('Wystąpił nieznany błąd.', 'error');
       }
     }
   };

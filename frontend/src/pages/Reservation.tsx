@@ -62,7 +62,7 @@ export default function Reservation() {
 
   const handleReservation = async () => {
     if (selectedSeats.length === 0) {
-      alert('Wybierz przynajmniej jedno miejsce');
+      showNotification('Wybierz przynajmniej jedno miejsce.', 'error');
       return;
     }
 

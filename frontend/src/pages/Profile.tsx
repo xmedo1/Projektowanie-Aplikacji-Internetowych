@@ -4,6 +4,7 @@ import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import Button from '../components/Button';
 import { isAxiosError } from 'axios';
+import { useNotification } from '../context/NotificationContext';
 
 interface Movie {
   title: string;
@@ -26,7 +27,8 @@ interface Reservation {
 }
 
 export default function Profile() {
-  const { user, refreshUser, showNotification } = useAuth();
+  const { user, refreshUser } = useAuth();
+  const { showNotification } = useNotification();
   const navigate = useNavigate();
 
   const [reservations, setReservations] = useState<Reservation[]>([]);
@@ -71,9 +73,9 @@ export default function Profile() {
       showNotification('Dane profilu zostały zaktualizowane!');
     } catch (error) {
       if (isAxiosError(error)) {
-        alert(error.response?.data?.error || 'Błąd aktualizacji danych.');
+        showNotification(error.response?.data?.error || 'Błąd aktualizacji danych.', 'error');
       } else {
-        alert('Wystąpił nieznany błąd.');
+        showNotification('Wystąpił nieznany błąd.', 'error');
       }
     }
   };
