@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import Button from '../components/Button';
-import { useAuth } from '../context/AuthContext';
+import { useNotification } from '../context/NotificationContext';
 import { isAxiosError } from 'axios';
 
 interface Screening {
@@ -20,13 +20,13 @@ const SEATS_PER_ROW = 20;
 export default function Reservation() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { showNotification } = useAuth();
+  const { showNotification } = useNotification();
 
   const [screening, setScreening] = useState<Screening | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  const [selectedSeat, setSelectedSeat] = useState<{ row: string; number: number } | null>(null);
+  const [selectedSeats, setSelectedSeats] = useState<{ row: string; number: number }[]>([]);
   const [ticketType, setTicketType] = useState<'REGULAR' | 'STUDENT'>('REGULAR');
 
   useEffect(() => {
@@ -49,28 +49,50 @@ export default function Reservation() {
     return screening.reservations.some((res) => res.seatRow === row && res.seatNumber === number);
   };
 
+  const toggleSeat = (row: string, number: number) => {
+    setSelectedSeats((prev) => {
+      const isAlreadySelected = prev.some((seat) => seat.row === row && seat.number === number);
+      if (isAlreadySelected) {
+        return prev.filter((seat) => !(seat.row === row && seat.number === number));
+      } else {
+        return [...prev, { row, number }];
+      }
+    });
+  };
+
   const handleReservation = async () => {
-    if (!selectedSeat) {
-      alert('Wybierz miejsce!');
+    if (selectedSeats.length === 0) {
+      alert('Wybierz przynajmniej jedno miejsce');
       return;
     }
 
     try {
-      await api.post('/reservations', {
-        screeningId: screening?.id,
-        seatRow: selectedSeat.row,
-        seatNumber: selectedSeat.number,
-        ticketType,
-      });
+      await Promise.all(
+        selectedSeats.map((seat) =>
+          api.post('/reservations', {
+            screeningId: screening?.id,
+            seatRow: seat.row,
+            seatNumber: seat.number,
+            ticketType,
+          }),
+        ),
+      );
 
-      showNotification('Bilet został zarezerwowany');
-      navigate('/profile');
+      showNotification(`Liczba zarezerwowanych biletów: ${selectedSeats.length}`);
+      setTimeout(() => {
+        navigate('/profile');
+      }, 1500);
     } catch (error) {
       if (isAxiosError(error) && error.response?.status === 409) {
-        alert('Miejsce zajęte');
-        window.location.reload();
+        showNotification(
+          'Jedno lub więcej z wybranych miejsc zostało w międzyczasie zajęte.',
+          'error',
+        );
+        setTimeout(() => {
+          window.location.reload();
+        }, 2000);
       } else {
-        alert('Błąd podczas rezerwacji.');
+        showNotification('Wystąpił błąd podczas rezerwacji.', 'error');
       }
     }
   };
@@ -83,6 +105,10 @@ export default function Reservation() {
     );
   if (error || !screening)
     return <div className="mt-20 text-center text-error">{error || 'Nie znaleziono seansu'}</div>;
+
+  const singleTicketPrice =
+    ticketType === 'REGULAR' ? screening.ticketPrice : screening.ticketPrice - 500;
+  const totalPrice = singleTicketPrice * selectedSeats.length;
 
   return (
     <div className="p-4 sm:p-8 overflow-x-auto">
@@ -125,13 +151,15 @@ export default function Reservation() {
                     {Array.from({ length: SEATS_PER_ROW }).map((_, idx) => {
                       const number = idx + 1;
                       const taken = isSeatTaken(row, number);
-                      const selected = selectedSeat?.row === row && selectedSeat?.number === number;
+                      const selected = selectedSeats.some(
+                        (s) => s.row === row && s.number === number,
+                      );
 
                       return (
                         <button
                           key={`${row}-${number}`}
                           disabled={taken}
-                          onClick={() => setSelectedSeat({ row, number })}
+                          onClick={() => toggleSeat(row, number)}
                           className={`
                             flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-b-sm rounded-t-lg border text-sm font-bold transition-all
                             ${taken ? 'line-through cursor-not-allowed border-transparent bg-fg-muted/20 text-fg-muted' : ''}
@@ -171,31 +199,50 @@ export default function Reservation() {
             <h2 className="mb-6 border-b border-input pb-4 text-xl font-bold">Podsumowanie</h2>
 
             <div className="mb-6">
-              <div className="mb-1 text-sm text-fg-muted">Wybrane miejsce:</div>
-              {selectedSeat ? (
-                <div className="text-2xl font-bold text-fg-default">
-                  Rząd {selectedSeat.row}, Miejsce {selectedSeat.number}
+              <div className="mb-2 text-sm text-fg-muted">
+                Wybrane miejsca ({selectedSeats.length}):
+              </div>
+              {selectedSeats.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {selectedSeats.map((seat) => (
+                    <div
+                      key={`${seat.row}-${seat.number}`}
+                      className="rounded-md border border-accent/40 bg-accent/10 px-2 py-1 text-sm font-bold text-accent"
+                    >
+                      {seat.row}
+                      {seat.number}
+                    </div>
+                  ))}
                 </div>
               ) : (
-                <div className="text-lg italic text-fg-muted">Nie wybrano miejsca</div>
+                <div className="text-lg italic text-fg-muted">Nie wybrano miejsc</div>
               )}
             </div>
 
             <div className="mb-8">
-              <div className="mb-2 text-sm text-fg-muted">Typ biletu:</div>
+              <div className="mb-2 text-sm text-fg-muted">Typ biletów:</div>
               <select
                 value={ticketType}
                 onChange={(e) => setTicketType(e.target.value as 'REGULAR' | 'STUDENT')}
                 className="w-full rounded-lg border border-input bg-input px-4 py-2 text-fg-default focus:border-accent focus:outline-none"
               >
                 <option value="REGULAR">
-                  Normalny ({(screening.ticketPrice / 100).toFixed(2)} zł)
+                  Normalny ({(screening.ticketPrice / 100).toFixed(2)} zł/szt.)
                 </option>
                 <option value="STUDENT">
-                  Ulgowy ({((screening.ticketPrice - 500) / 100).toFixed(2)} zł)
+                  Ulgowy ({((screening.ticketPrice - 500) / 100).toFixed(2)} zł/szt.)
                 </option>
               </select>
             </div>
+
+            {selectedSeats.length > 0 && (
+              <div className="mb-6 flex items-center justify-between border-t border-input pt-4">
+                <span className="text-fg-muted">Łącznie do zapłaty:</span>
+                <span className="text-2xl font-black text-fg-default">
+                  {(totalPrice / 100).toFixed(2)} zł
+                </span>
+              </div>
+            )}
 
             <Button onClick={handleReservation}>Kup bilet</Button>
           </div>

@@ -2,20 +2,12 @@ import { useEffect, useState, type ReactNode } from 'react';
 import api from '../services/api';
 import { isAxiosError } from 'axios';
 import { AuthContext, type User } from './AuthContext';
-import Notification from '../components/Notification';
+import { useNotification } from './NotificationContext';
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-
-  const [notification, setNotification] = useState<string | null>(null);
-
-  const showNotification = (message: string) => {
-    setNotification(message);
-    setTimeout(() => {
-      setNotification(null);
-    }, 3000);
-  };
+  const { showNotification } = useNotification();
 
   const refreshUser = async () => {
     try {
@@ -44,9 +36,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, loading, logout, refreshUser, showNotification }}>
+    <AuthContext.Provider value={{ user, loading, logout, refreshUser }}>
       {children}
-      <Notification message={notification} />
     </AuthContext.Provider>
   );
 }
