@@ -95,7 +95,7 @@ export default function Reservation() {
         </button>
 
         <div className="mb-8 rounded-xl bg-card p-6 shadow-xl border border-input">
-          <h1 className="text-3xl font-bold text-white mb-2">{screening.movie.title}</h1>
+          <h1 className="text-3xl font-bold text-fg-default mb-2">{screening.movie.title}</h1>
           <p className="text-accent font-medium text-lg">
             {new Date(screening.startTime).toLocaleDateString('pl-PL', {
               weekday: 'long',
@@ -113,7 +113,7 @@ export default function Reservation() {
 
         <div className="flex flex-col lg:flex-row gap-12">
           <div className="flex-1 rounded-xl bg-card p-8 shadow-xl flex flex-col items-center overflow-x-auto">
-            <div className="w-3/4 h-8 bg-gray-600 rounded-t-3xl mb-12 flex items-center justify-center text-sm font-bold text-gray-300 shadow-[0_20px_20px_rgba(255,255,255,0.05)]">
+            <div className="w-3/4 h-8 bg-fg-muted/20 rounded-t-3xl mb-12 flex items-center justify-center text-sm font-bold text-fg-muted shadow-[0_20px_20px_rgba(255,255,255,0.05)]">
               EKRAN
             </div>
 
@@ -133,10 +133,10 @@ export default function Reservation() {
                           disabled={taken}
                           onClick={() => setSelectedSeat({ row, number })}
                           className={`
-                            h-10 w-10 rounded-t-lg rounded-b-sm font-bold text-sm transition-all
-                            ${taken ? 'bg-gray-700 text-gray-500 cursor-not-allowed' : ''}
-                            ${selected ? 'bg-accent text-white scale-110 shadow-[0_0_10px_#10b981]' : ''}
-                            ${!taken && !selected ? 'bg-input text-gray-300 hover:border hover:border-accent hover:text-white' : ''}
+                            flex h-10 w-10 items-center justify-center rounded-t-lg rounded-b-sm border text-sm font-bold transition-all
+                            ${taken ? 'border-transparent bg-fg-muted/20 text-fg-muted cursor-not-allowed line-through' : ''}
+                            ${selected ? 'border-accent bg-accent text-fg-on-accent scale-110 shadow-[0_0_10px_var(--color-accent)]' : ''}
+                            ${!taken && !selected ? 'border-transparent bg-input text-fg-default hover:border-accent hover:text-accent' : ''}
                           `}
                         >
                           {number}
@@ -149,15 +149,20 @@ export default function Reservation() {
               ))}
             </div>
 
-            <div className="mt-12 flex gap-6 text-sm text-fg-muted">
+            <div className="mt-12 flex justify-center gap-8 text-sm text-fg-muted">
               <div className="flex items-center gap-2">
-                <div className="h-4 w-4 rounded-sm bg-input"></div> Wolne
+                <div className="h-4 w-4 rounded-sm border border-transparent bg-input"></div>
+                Wolne
               </div>
               <div className="flex items-center gap-2">
-                <div className="h-4 w-4 rounded-sm bg-accent"></div> Wybrane
+                <div className="h-4 w-4 rounded-sm border border-accent bg-accent"></div>
+                Wybrane
               </div>
               <div className="flex items-center gap-2">
-                <div className="h-4 w-4 rounded-sm bg-gray-700"></div> Zajęte
+                <div className="flex h-4 w-4 items-center justify-center rounded-sm border border-transparent bg-fg-muted/20">
+                  <div className="h-[2px] w-full bg-fg-muted opacity-50"></div>
+                </div>
+                Zajęte
               </div>
             </div>
           </div>
@@ -168,7 +173,7 @@ export default function Reservation() {
             <div className="mb-6">
               <div className="text-sm text-fg-muted mb-1">Wybrane miejsce:</div>
               {selectedSeat ? (
-                <div className="text-2xl font-bold text-white">
+                <div className="text-2xl font-bold text-fg-default">
                   Rząd {selectedSeat.row}, Miejsce {selectedSeat.number}
                 </div>
               ) : (
@@ -181,7 +186,7 @@ export default function Reservation() {
               <select
                 value={ticketType}
                 onChange={(e) => setTicketType(e.target.value as 'REGULAR' | 'STUDENT')}
-                className="w-full bg-input border border-gray-600 text-white rounded-lg px-4 py-2 focus:border-accent focus:outline-none"
+                className="w-full bg-input border border-input text-fg-default rounded-lg px-4 py-2 focus:border-accent focus:outline-none"
               >
                 <option value="REGULAR">
                   Normalny ({(screening.ticketPrice / 100).toFixed(2)} zł)

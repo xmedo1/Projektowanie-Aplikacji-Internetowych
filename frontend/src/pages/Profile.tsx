@@ -157,7 +157,7 @@ export default function Profile() {
                     <div className="absolute top-1/2 -right-3 h-6 w-6 -translate-y-1/2 rounded-full bg-page sm:block hidden"></div>
 
                     <div>
-                      <h3 className="text-xl font-bold text-white mb-1">
+                      <h3 className="text-xl font-bold text-fg-default mb-1">
                         {reservation.screening.movie.title}
                       </h3>
                       <p className="text-accent font-bold mb-3">
@@ -175,13 +175,13 @@ export default function Profile() {
                       <div className="flex gap-4 text-sm text-fg-muted">
                         <span>
                           Sala:{' '}
-                          <span className="text-white font-medium">
+                          <span className="text-fg-default font-medium">
                             {reservation.screening.roomName}
                           </span>
                         </span>
                         <span>
                           Czas trwania:{' '}
-                          <span className="text-white font-medium">
+                          <span className="text-fg-default font-medium">
                             {reservation.screening.movie.durationMinutes} min
                           </span>
                         </span>
@@ -190,10 +190,10 @@ export default function Profile() {
 
                     <div className="mt-4 sm:mt-0 sm:text-right border-t sm:border-t-0 sm:border-l border-gray-600 pt-4 sm:pt-0 sm:pl-6 flex flex-col justify-center">
                       <div className="text-sm text-fg-muted">Twój bilet</div>
-                      <div className="text-2xl font-black text-white">
+                      <div className="text-2xl font-black text-fg-default">
                         Rząd {reservation.seatRow}, Miejsce {reservation.seatNumber}
                       </div>
-                      <div className="text-sm font-bold mt-1 text-gray-400">
+                      <div className="text-sm font-bold mt-1 text-fg-muted">
                         {reservation.ticketType === 'STUDENT' ? 'Ulgowy' : 'Normalny'}
                       </div>
                     </div>

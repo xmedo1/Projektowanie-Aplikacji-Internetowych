@@ -102,7 +102,7 @@ export default function MovieDetails() {
                 className="flex flex-col justify-between rounded-xl bg-input p-6 shadow-md border border-transparent hover:border-accent transition-colors"
               >
                 <div className="mb-4">
-                  <div className="text-xl font-bold text-white mb-1">
+                  <div className="text-xl font-bold text-fg-defaultmb-1">
                     {new Date(screening.startTime).toLocaleDateString('pl-PL', {
                       weekday: 'long',
                       day: 'numeric',
@@ -117,11 +117,12 @@ export default function MovieDetails() {
                   </div>
                   <div className="flex justify-between text-sm text-fg-muted">
                     <span>
-                      Sala: <span className="text-white font-medium">{screening.roomName}</span>
+                      Sala:{' '}
+                      <span className="text-fg-default font-medium">{screening.roomName}</span>
                     </span>
                     <span>
                       Cena:{' '}
-                      <span className="text-white font-medium">
+                      <span className="text-fg-default font-medium">
                         {(screening.ticketPrice / 100).toFixed(2)} zł
                       </span>
                     </span>

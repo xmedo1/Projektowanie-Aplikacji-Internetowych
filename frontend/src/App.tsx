@@ -8,37 +8,40 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Reservation from './pages/Reservation';
 import MovieDetails from './pages/MovieDetails';
 import Layout from './components/Layout';
+import { ThemeProvider } from './context/ThemeProvider';
 
 function App() {
   return (
-    <AuthProvider>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route element={<Layout />}>
-            <Route path="/" element={<Home />} />
-            <Route
-              path="/profile"
-              element={
-                <ProtectedRoute>
-                  <Profile />
-                </ProtectedRoute>
-              }
-            />
-            <Route path="/movie/:id" element={<MovieDetails />} />
-            <Route
-              path="/reservation/:id"
-              element={
-                <ProtectedRoute>
-                  <Reservation />
-                </ProtectedRoute>
-              }
-            />
-          </Route>
-        </Routes>
-      </BrowserRouter>
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route element={<Layout />}>
+              <Route path="/" element={<Home />} />
+              <Route
+                path="/profile"
+                element={
+                  <ProtectedRoute>
+                    <Profile />
+                  </ProtectedRoute>
+                }
+              />
+              <Route path="/movie/:id" element={<MovieDetails />} />
+              <Route
+                path="/reservation/:id"
+                element={
+                  <ProtectedRoute>
+                    <Reservation />
+                  </ProtectedRoute>
+                }
+              />
+            </Route>
+          </Routes>
+        </BrowserRouter>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
 

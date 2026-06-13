@@ -79,7 +79,7 @@ export default function Register() {
 
       <p className="mt-6 text-center text-sm text-gray-400">
         Masz już konto?{' '}
-        <Link to="/login" className="text-green-400 hover:underline">
+        <Link to="/login" className="text-accent hover:underline">
           Zaloguj się
         </Link>
       </p>
