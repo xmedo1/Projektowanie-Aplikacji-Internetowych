@@ -3,6 +3,9 @@ export interface Movie {
   title: string;
   durationMinutes: number;
   screenings?: Screening[];
+  _count?: {
+    screenings: number;
+  };
 }
 
 export interface Screening {

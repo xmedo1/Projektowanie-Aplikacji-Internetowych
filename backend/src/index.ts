@@ -80,9 +80,40 @@ const paymentSchema = z.object({
   reservationId: z.number().int().positive(),
 });
 
+// ----------- MOVIES -----------
+// C
+app.post('/api/movies', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const { title, durationMinutes } = req.body;
+
+    if (!title || !durationMinutes) {
+      return res.status(400).json({ error: 'Podaj tytuł i czas trwania filmu.' });
+    }
+
+    const newMovie = await prisma.movie.create({
+      data: {
+        title,
+        durationMinutes: Number(durationMinutes),
+      },
+    });
+
+    res.status(201).json(newMovie);
+  } catch (error) {
+    console.error('Błąd dodawania filmu:', error);
+    res.status(500).json({ error: 'Nie udało się dodać filmu.' });
+  }
+});
+
+// R
 app.get('/api/movies', async (_req, res) => {
   try {
-    const movies = await prisma.movie.findMany();
+    const movies = await prisma.movie.findMany({
+      include: {
+        _count: {
+          select: { screenings: true },
+        },
+      },
+    });
     res.json(movies);
   } catch (error) {
     console.error('Error fetching movies:', error);
@@ -109,6 +140,49 @@ app.get('/api/movies/:id', async (req, res) => {
   } catch (error) {
     console.error('Error fetching movie:', error);
     res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// U
+app.put('/api/movies/:id', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const movieId = parseInt(req.params.id as string);
+    const { title, durationMinutes } = req.body;
+
+    if (!title || !durationMinutes) {
+      return res.status(400).json({ error: 'Podaj tytuł i czas trwania filmu.' });
+    }
+
+    const updatedMovie = await prisma.movie.update({
+      where: { id: movieId },
+      data: {
+        title,
+        durationMinutes: Number(durationMinutes),
+      },
+    });
+
+    res.json(updatedMovie);
+  } catch (error) {
+    console.error('Błąd aktualizacji filmu:', error);
+    res.status(500).json({ error: 'Nie udało się zaktualizować filmu.' });
+  }
+});
+
+// D
+app.delete('/api/movies/:id', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const movieId = parseInt(req.params.id as string);
+
+    await prisma.movie.delete({
+      where: { id: movieId },
+    });
+
+    res.json({ message: 'Film został usunięty.' });
+  } catch (error) {
+    console.error('Błąd usuwania filmu:', error);
+    res
+      .status(400)
+      .json({ error: 'Nie można usunąć filmu. Prawdopodobnie są do niego przypisane seanse.' });
   }
 });
 

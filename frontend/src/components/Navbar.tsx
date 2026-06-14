@@ -63,7 +63,7 @@ export default function Navbar() {
 
           <button
             onClick={toggleTheme}
-            className="text-fg-muted transition-transform hover:scale-110 hover:text-accent focus:outline-none"
+            className="text-fg-muted transition-transform hover:scale-110 hover:text-accent focus:outline-none cursor-pointer"
             title={theme === 'light' ? 'Przełącz na ciemny' : 'Przełącz na jasny'}
           >
             {theme === 'light' ? (
