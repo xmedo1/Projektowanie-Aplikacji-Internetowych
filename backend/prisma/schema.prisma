@@ -14,6 +14,7 @@ model User {
   firstName    String
   reservations SeatReservation[]
   createdAt    DateTime          @default(now())
+  role         Role              @default(USER)
 }
 
 model Movie {
@@ -56,4 +57,9 @@ enum ReservationStatus {
 enum TicketType {
   REGULAR // normalny
   STUDENT // ulgowy
+}
+
+enum Role {
+  USER
+  ADMIN
 }

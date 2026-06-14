@@ -1,4 +1,4 @@
-import { ReservationStatus, TicketType } from '@prisma/client';
+import { ReservationStatus, TicketType, Role } from '@prisma/client';
 import { prisma } from '../src/db.js';
 
 async function main() {
@@ -15,9 +15,20 @@ async function main() {
       email: 'jankowalski@example.com',
       passwordHash: '$2b$10$x2PyC.TpS4YNQm26OT5.x..buaSG4jprk.huasXjY4sTI4kl019LK', // hasło: "password" + salt
       firstName: 'Jan',
+      role: Role.USER,
     },
   });
   console.log(`Created user: ${user.email}`);
+
+  const adminUser = await prisma.user.create({
+    data: {
+      email: 'admin@example.com',
+      passwordHash: '$2b$10$x2PyC.TpS4YNQm26OT5.x..buaSG4jprk.huasXjY4sTI4kl019LK', // hasło: "password" + salt
+      firstName: 'Admin',
+      role: Role.ADMIN,
+    },
+  });
+  console.log(`Created admin: ${adminUser.email}`);
 
   const moviesData = [
     { title: 'Titanic', durationMinutes: 195 },

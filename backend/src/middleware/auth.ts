@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
 dotenv.config({ path: '../.env' });
+import { prisma } from '../db.js';
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
@@ -28,5 +29,27 @@ export const authenticateToken = (req: AuthRequest, res: Response, next: NextFun
   } catch (error) {
     console.error('Authentication failed:', error);
     return res.status(403).json({ error: 'Invalid token.' });
+  }
+};
+
+export const requireAdmin = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  if (!req.userId) {
+    return res.status(401).json({ error: 'Brak dostępu. Zaloguj się.' });
+  }
+
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: req.userId },
+      select: { role: true },
+    });
+
+    if (!user || user.role !== 'ADMIN') {
+      return res.status(403).json({ error: 'Brak uprawnień administratora.' });
+    }
+
+    next();
+  } catch (error) {
+    console.error('Błąd weryfikacji roli:', error);
+    return res.status(500).json({ error: 'Wystąpił błąd serwera.' });
   }
 };
