@@ -3,25 +3,14 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import api from '../services/api';
 import Button from '../components/Button';
 import { useAuth } from '../context/AuthContext';
-
-interface Screening {
-  id: number;
-  startTime: string;
-  roomName: string;
-  ticketPrice: number;
-}
-
-interface Movie {
-  id: number;
-  title: string;
-  durationMinutes: number;
-  screenings: Screening[];
-}
+import { useNotification } from '../context/NotificationContext';
+import type { Movie } from '../types';
 
 export default function MovieDetails() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { showNotification } = useNotification();
 
   const [movie, setMovie] = useState<Movie | null>(null);
   const [loading, setLoading] = useState(true);
@@ -53,7 +42,7 @@ export default function MovieDetails() {
 
   if (error || !movie) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-page text-error gap-4">
+      <div className="flex py-32 flex-col items-center justify-center text-error gap-4">
         <p>{error || 'Nie znaleziono filmu'}</p>
         <div className="w-48">
           <Button onClick={() => navigate('/')}>Wróć do repertuaru</Button>
@@ -63,16 +52,13 @@ export default function MovieDetails() {
   }
 
   return (
-    <div className="min-h-screen bg-page text-fg-default p-8">
+    <div className="p-4 sm:p-8">
       <div className="container mx-auto max-w-4xl">
-        <button
-          onClick={() => navigate('/')}
-          className="mb-6 text-accent hover:underline flex items-center gap-2"
-        >
-          Wróć do repertuaru
-        </button>
+        <div className="mb-8 w-56">
+          <Button onClick={() => navigate('/')}>Wróć do repertuaru</Button>
+        </div>
 
-        <div className="flex flex-col md:flex-row gap-8 mb-12 rounded-2xl bg-card p-8 shadow-2xl">
+        <div className="mb-12 flex flex-col gap-8 rounded-2xl bg-card p-8 shadow-2xl md:flex-row">
           <img
             src={`/posters/${movie.id}.jpg`}
             alt={`Plakat filmu ${movie.title}`}
@@ -92,7 +78,7 @@ export default function MovieDetails() {
 
         <h2 className="text-2xl font-bold mb-6 border-b border-input pb-4">Wybierz seans</h2>
 
-        {movie.screenings.length === 0 ? (
+        {!movie.screenings || movie.screenings.length === 0 ? (
           <p className="text-fg-muted">Brak zaplanowanych seansów dla tego filmu.</p>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -102,7 +88,7 @@ export default function MovieDetails() {
                 className="flex flex-col justify-between rounded-xl bg-input p-6 shadow-md border border-transparent hover:border-accent transition-colors"
               >
                 <div className="mb-4">
-                  <div className="text-xl font-bold text-fg-defaultmb-1">
+                  <div className="text-xl font-bold text-fg-default mb-1">
                     {new Date(screening.startTime).toLocaleDateString('pl-PL', {
                       weekday: 'long',
                       day: 'numeric',
@@ -139,10 +125,10 @@ export default function MovieDetails() {
                 ) : (
                   <button
                     onClick={() => {
-                      alert('Musisz być zalogowany, aby zarezerwować bilet!');
+                      showNotification('Musisz być zalogowany, aby zarezerwować bilet!', 'error');
                       navigate('/login');
                     }}
-                    className="w-full rounded-lg bg-gray-600 px-4 py-3 text-center font-bold text-white cursor-not-allowed hover:bg-gray-500 transition"
+                    className="w-full rounded-lg bg-fg-muted px-4 py-3 text-center font-bold text-page transition hover:opacity-80 cursor-not-allowed"
                   >
                     Zaloguj się by kupić
                   </button>

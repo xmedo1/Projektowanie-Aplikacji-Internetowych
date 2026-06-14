@@ -36,6 +36,7 @@ export default function Login() {
     try {
       await api.post('/auth/login', data);
       await refreshUser();
+      showNotification('Zalogowano pomyślnieW');
       navigate('/');
     } catch (error) {
       if (isAxiosError(error)) {
@@ -68,7 +69,7 @@ export default function Login() {
         <Button type="submit">Zaloguj się</Button>
       </form>
 
-      <p className="mt-6 text-center text-sm text-gray-400">
+      <p className="mt-6 text-center text-sm text-fg-muted">
         Nie masz jeszcze konta?{' '}
         <Link to="/register" className="text-accent hover:underline">
           Zarejestruj się

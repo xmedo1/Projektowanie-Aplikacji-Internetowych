@@ -4,15 +4,7 @@ import api from '../services/api';
 import Button from '../components/Button';
 import { useNotification } from '../context/NotificationContext';
 import { isAxiosError } from 'axios';
-
-interface Screening {
-  id: number;
-  startTime: string;
-  roomName: string;
-  ticketPrice: number;
-  movie: { title: string; durationMinutes: number };
-  reservations: { seatRow: string; seatNumber: number; status: string }[];
-}
+import type { Screening } from '../types/';
 
 const ROWS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
 const SEATS_PER_ROW = 20;
@@ -45,7 +37,7 @@ export default function Reservation() {
   }, [id]);
 
   const isSeatTaken = (row: string, number: number) => {
-    if (!screening) return false;
+    if (!screening || !screening.reservations) return false;
     return screening.reservations.some((res) => res.seatRow === row && res.seatNumber === number);
   };
 
@@ -81,7 +73,7 @@ export default function Reservation() {
       showNotification(`Liczba zarezerwowanych biletów: ${selectedSeats.length}`);
       setTimeout(() => {
         navigate('/profile');
-      }, 1500);
+      }, 2000);
     } catch (error) {
       if (isAxiosError(error) && error.response?.status === 409) {
         showNotification(
@@ -99,12 +91,19 @@ export default function Reservation() {
 
   if (loading)
     return (
-      <div className="flex h-64 items-center justify-center text-fg-muted">
+      <div className="flex items-center justify-center py-32 text-fg-muted">
         Ładowanie sali kinowej...
       </div>
     );
   if (error || !screening)
-    return <div className="mt-20 text-center text-error">{error || 'Nie znaleziono seansu'}</div>;
+    return (
+      <div className="mt-20 flex flex-col items-center justify-center gap-4 text-error">
+        <p>{error || 'Nie znaleziono seansu'}</p>
+        <div className="w-48">
+          <Button onClick={() => navigate('/')}>Wróć do repertuaru</Button>
+        </div>
+      </div>
+    );
 
   const singleTicketPrice =
     ticketType === 'REGULAR' ? screening.ticketPrice : screening.ticketPrice - 500;
@@ -113,29 +112,28 @@ export default function Reservation() {
   return (
     <div className="p-4 sm:p-8 overflow-x-auto">
       <div className="mx-auto w-fit min-w-full max-w-none">
-        <button
-          onClick={() => navigate(-1)}
-          className="mb-6 flex items-center gap-2 text-accent hover:underline cursor-pointer"
-        >
-          Wróć do opisu filmu
-        </button>
-
-        <div className="mx-auto max-w-5xl mb-8 rounded-xl border border-input bg-card p-6 shadow-xl">
-          <h1 className="mb-2 text-3xl font-bold text-fg-default">{screening.movie.title}</h1>
-          <p className="text-lg font-medium text-accent">
-            {new Date(screening.startTime).toLocaleDateString('pl-PL', {
-              weekday: 'long',
-              day: 'numeric',
-              month: 'long',
-            })}{' '}
-            o{' '}
-            {new Date(screening.startTime).toLocaleTimeString('pl-PL', {
-              hour: '2-digit',
-              minute: '2-digit',
-            })}
-          </p>
-          <p className="mt-1 text-fg-muted">Sala: {screening.roomName}</p>
+        <div className="mb-6 w-56">
+          <Button onClick={() => navigate(-1)}>Wróć do opisu filmu</Button>
         </div>
+
+        {screening.movie && (
+          <div className="mx-auto mb-8 max-w-5xl rounded-xl border border-input bg-card p-6 shadow-xl">
+            <h1 className="mb-2 text-3xl font-bold text-fg-default">{screening.movie.title}</h1>
+            <p className="text-lg font-medium text-accent">
+              {new Date(screening.startTime).toLocaleDateString('pl-PL', {
+                weekday: 'long',
+                day: 'numeric',
+                month: 'long',
+              })}{' '}
+              o{' '}
+              {new Date(screening.startTime).toLocaleTimeString('pl-PL', {
+                hour: '2-digit',
+                minute: '2-digit',
+              })}
+            </p>
+            <p className="mt-1 text-fg-muted">Sala: {screening.roomName}</p>
+          </div>
+        )}
 
         <div className="flex flex-col items-center justify-center gap-12 xl:flex-row xl:items-start">
           <div className="flex w-fit flex-col items-center rounded-xl bg-card p-8 shadow-xl">
