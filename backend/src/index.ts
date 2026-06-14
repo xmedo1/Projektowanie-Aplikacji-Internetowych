@@ -76,6 +76,10 @@ const updateProfileSchema = z.object({
     .optional(),
 });
 
+const paymentSchema = z.object({
+  reservationId: z.number().int().positive(),
+});
+
 app.get('/api/movies', async (_req, res) => {
   try {
     const movies = await prisma.movie.findMany();
@@ -114,6 +118,20 @@ app.get('/api/screenings/:id', async (req, res) => {
     if (isNaN(screeningId)) {
       return res.status(400).json({ error: 'Wrong screening ID' });
     }
+
+    const expirationTime = new Date(Date.now() - 5 * 60 * 1000); // teraz - 5 minut
+
+    // usuwanie nieopłaconych rezerwacji
+    await prisma.seatReservation.deleteMany({
+      where: {
+        screeningId: screeningId,
+        status: 'LOCKED',
+        createdAt: {
+          lt: expirationTime,
+        },
+      },
+    });
+
     const screening = await prisma.screening.findUnique({
       where: { id: screeningId },
       include: {
@@ -356,6 +374,49 @@ app.put('/api/auth/update-profile', authenticateToken, async (req: AuthRequest, 
   }
 });
 
+app.patch('/api/reservations/:id/pay', authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    const validation = paymentSchema.safeParse({
+      reservationId: parseInt(req.params.id as string),
+    });
+
+    if (!validation.success) {
+      return res.status(400).json({
+        error: 'Validation failed',
+        details: validation.error.issues.map((issue) => issue.message),
+      });
+    }
+
+    const { reservationId } = validation.data;
+    const currentUserId = req.userId;
+
+    const reservation = await prisma.seatReservation.findUnique({
+      where: { id: reservationId },
+    });
+
+    if (!reservation) {
+      return res.status(404).json({ error: 'Reservation not found' });
+    }
+
+    if (reservation.userId !== currentUserId) {
+      return res.status(403).json({ error: 'You do not own this reservation' });
+    }
+
+    if (reservation.status === 'BOOKED') {
+      return res.status(400).json({ error: 'Reservation is already paid' });
+    }
+
+    const updatedReservation = await prisma.seatReservation.update({
+      where: { id: reservationId },
+      data: { status: 'BOOKED' },
+    });
+
+    res.json({ message: 'Payment successful', reservation: updatedReservation });
+  } catch (error) {
+    console.error('Error processing payment:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
 app.listen(PORT, () => {
   console.log(`API URL: http://localhost:${PORT}`);
 });

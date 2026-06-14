@@ -21,4 +21,10 @@ export interface Reservation {
   ticketType: string;
   status: string;
   screening: Screening;
+  createdAt: string;
+}
+
+export interface TicketCardProps {
+  reservation: Reservation;
+  onRefresh: () => void;
 }

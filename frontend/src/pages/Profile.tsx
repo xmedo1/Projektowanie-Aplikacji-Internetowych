@@ -21,6 +21,17 @@ export default function Profile() {
   const [email, setEmail] = useState(user?.email || '');
   const [password, setPassword] = useState('');
 
+  const fetchReservations = async () => {
+    try {
+      const response = await api.get('/auth/my-reservations');
+      setReservations(response.data);
+    } catch (error) {
+      console.error('Błąd pobierania biletów:', error);
+    } finally {
+      setLoadingTickets(false);
+    }
+  };
+
   useEffect(() => {
     const fetchReservations = async () => {
       try {
@@ -124,7 +135,11 @@ export default function Profile() {
             ) : (
               <div className="space-y-4">
                 {reservations.map((reservation) => (
-                  <TicketCard key={reservation.id} reservation={reservation} />
+                  <TicketCard
+                    key={reservation.id}
+                    reservation={reservation}
+                    onRefresh={fetchReservations}
+                  />
                 ))}
               </div>
             )}

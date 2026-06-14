@@ -70,7 +70,9 @@ export default function Reservation() {
         ),
       );
 
-      showNotification(`Liczba zarezerwowanych biletów: ${selectedSeats.length}`);
+      showNotification(
+        `Liczba zarezerwowanych biletów: ${selectedSeats.length}. Pamiętaj o opłaceniu w ciągu 5 minut!`,
+      );
       setTimeout(() => {
         navigate('/profile');
       }, 2000);

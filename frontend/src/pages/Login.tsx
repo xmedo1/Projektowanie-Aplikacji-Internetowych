@@ -36,7 +36,7 @@ export default function Login() {
     try {
       await api.post('/auth/login', data);
       await refreshUser();
-      showNotification('Zalogowano pomyślnieW');
+      showNotification('Zalogowano pomyślnie');
       navigate('/');
     } catch (error) {
       if (isAxiosError(error)) {
