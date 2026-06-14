@@ -13,6 +13,7 @@ import { NotificationProvider } from './context/NotificationProvider';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminMovies from './pages/AdminMovies';
 import AdminScreenings from './pages/AdminScreenings';
+import AdminUsers from './pages/AdminUsers';
 
 function App() {
   return (
@@ -45,7 +46,7 @@ function App() {
                 <Route
                   path="/admin"
                   element={
-                    <ProtectedRoute>
+                    <ProtectedRoute requireAdmin>
                       <AdminDashboard />
                     </ProtectedRoute>
                   }
@@ -53,7 +54,7 @@ function App() {
                 <Route
                   path="/admin/movies"
                   element={
-                    <ProtectedRoute>
+                    <ProtectedRoute requireAdmin>
                       <AdminMovies />
                     </ProtectedRoute>
                   }
@@ -61,8 +62,16 @@ function App() {
                 <Route
                   path="/admin/screenings"
                   element={
-                    <ProtectedRoute>
+                    <ProtectedRoute requireAdmin>
                       <AdminScreenings />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/users"
+                  element={
+                    <ProtectedRoute requireAdmin>
+                      <AdminUsers />
                     </ProtectedRoute>
                   }
                 />

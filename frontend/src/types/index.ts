@@ -38,6 +38,23 @@ export interface User {
   email: string;
   firstName: string;
   role: 'USER' | 'ADMIN';
+  createdAt?: string;
+  _count?: {
+    reservations: number;
+  };
+  reservations?: {
+    id: number;
+    status: string;
+    ticketType: string;
+    createdAt: string;
+    screening: {
+      startTime: string;
+      ticketPrice: number;
+      movie: {
+        title: string;
+      };
+    };
+  }[];
 }
 
 export interface ActionCardProps {
