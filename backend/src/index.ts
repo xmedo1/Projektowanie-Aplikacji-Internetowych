@@ -186,6 +186,47 @@ app.delete('/api/movies/:id', authenticateToken, requireAdmin, async (req, res) 
   }
 });
 
+// ----------- SCREENINGS -----------
+// C
+app.post('/api/screenings', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const { movieId, startTime, ticketPrice, roomName } = req.body;
+
+    if (!movieId || !startTime || !ticketPrice || !roomName) {
+      return res.status(400).json({ error: 'Podaj film, datę, cenę biletu i salę kinową.' });
+    }
+
+    const newScreening = await prisma.screening.create({
+      data: {
+        movieId: Number(movieId),
+        startTime: new Date(startTime),
+        ticketPrice: Number(ticketPrice),
+        roomName: String(roomName),
+      },
+      include: { movie: true },
+    });
+
+    res.status(201).json(newScreening);
+  } catch (error) {
+    console.error('Błąd dodawania seansu:', error);
+    res.status(500).json({ error: 'Nie udało się dodać seansu.' });
+  }
+});
+
+// R
+app.get('/api/screenings', async (_req, res) => {
+  try {
+    const screenings = await prisma.screening.findMany({
+      include: { movie: true },
+      orderBy: { startTime: 'asc' },
+    });
+    res.json(screenings);
+  } catch (error) {
+    console.error('Error fetching screenings:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
 app.get('/api/screenings/:id', async (req, res) => {
   try {
     const screeningId = parseInt(req.params.id);
@@ -223,6 +264,52 @@ app.get('/api/screenings/:id', async (req, res) => {
   } catch (error) {
     console.error('Error fetching screening:', error);
     res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// U
+app.put('/api/screenings/:id', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const screeningId = parseInt(req.params.id as string);
+    const { movieId, startTime, ticketPrice, roomName } = req.body;
+
+    if (!movieId || !startTime || !ticketPrice || !roomName) {
+      return res.status(400).json({ error: 'Podaj film, datę, cenę biletu i salę kinową.' });
+    }
+
+    const updatedScreening = await prisma.screening.update({
+      where: { id: screeningId },
+      data: {
+        movieId: Number(movieId),
+        startTime: new Date(startTime),
+        ticketPrice: Number(ticketPrice),
+        roomName: String(roomName),
+      },
+      include: { movie: true },
+    });
+
+    res.json(updatedScreening);
+  } catch (error) {
+    console.error('Błąd aktualizacji seansu:', error);
+    res.status(500).json({ error: 'Nie udało się zaktualizować seansu.' });
+  }
+});
+
+// D
+app.delete('/api/screenings/:id', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const screeningId = parseInt(req.params.id as string);
+
+    await prisma.screening.delete({
+      where: { id: screeningId },
+    });
+
+    res.json({ message: 'Seans został usunięty.' });
+  } catch (error) {
+    console.error('Błąd usuwania seansu:', error);
+    res.status(400).json({
+      error: 'Nie można usunąć seansu. Prawdopodobnie są do niego przypisane rezerwacje.',
+    });
   }
 });
 

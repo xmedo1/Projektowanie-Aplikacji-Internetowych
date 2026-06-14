@@ -12,6 +12,7 @@ import { ThemeProvider } from './context/ThemeProvider';
 import { NotificationProvider } from './context/NotificationProvider';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminMovies from './pages/AdminMovies';
+import AdminScreenings from './pages/AdminScreenings';
 
 function App() {
   return (
@@ -54,6 +55,14 @@ function App() {
                   element={
                     <ProtectedRoute>
                       <AdminMovies />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/screenings"
+                  element={
+                    <ProtectedRoute>
+                      <AdminScreenings />
                     </ProtectedRoute>
                   }
                 />

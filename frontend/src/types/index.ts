@@ -10,6 +10,7 @@ export interface Movie {
 
 export interface Screening {
   id: number;
+  movieId: number;
   startTime: string;
   roomName: string;
   ticketPrice: number;
