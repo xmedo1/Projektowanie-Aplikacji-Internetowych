@@ -3,9 +3,10 @@ import cors from 'cors';
 import { prisma } from './db.js';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import { authenticateToken, AuthRequest } from './middleware/auth.js';
+import { authenticateToken, AuthRequest, requireAdmin } from './middleware/auth.js';
 import { z } from 'zod';
 import dotenv from 'dotenv';
+import cookieParser from 'cookie-parser';
 dotenv.config({ path: '../.env' });
 
 const app = express();
@@ -17,8 +18,14 @@ if (!JWT_SECRET) {
   process.exit(1);
 }
 
-app.use(cors());
+app.use(
+  cors({
+    origin: 'http://localhost:5173',
+    credentials: true,
+  }),
+);
 app.use(express.json());
+app.use(cookieParser());
 
 const registerSchema = z.object({
   email: z.email({ error: 'Invalid email format' }),
@@ -58,9 +65,55 @@ const reservationSchema = z.object({
   }),
 });
 
+const updateProfileSchema = z.object({
+  email: z.email({ error: 'Invalid email format' }).optional(),
+
+  password: z.string().min(8, { error: 'Password must be at least 8 characters long' }).optional(),
+
+  firstName: z
+    .string({ error: 'First name must be a string' })
+    .min(2, { error: 'First name must be at least 2 characters long' })
+    .optional(),
+});
+
+const paymentSchema = z.object({
+  reservationId: z.number().int().positive(),
+});
+
+// ----------- MOVIES -----------
+// C
+app.post('/api/movies', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const { title, durationMinutes } = req.body;
+
+    if (!title || !durationMinutes) {
+      return res.status(400).json({ error: 'Podaj tytuł i czas trwania filmu.' });
+    }
+
+    const newMovie = await prisma.movie.create({
+      data: {
+        title,
+        durationMinutes: Number(durationMinutes),
+      },
+    });
+
+    res.status(201).json(newMovie);
+  } catch (error) {
+    console.error('Błąd dodawania filmu:', error);
+    res.status(500).json({ error: 'Nie udało się dodać filmu.' });
+  }
+});
+
+// R
 app.get('/api/movies', async (_req, res) => {
   try {
-    const movies = await prisma.movie.findMany();
+    const movies = await prisma.movie.findMany({
+      include: {
+        _count: {
+          select: { screenings: true },
+        },
+      },
+    });
     res.json(movies);
   } catch (error) {
     console.error('Error fetching movies:', error);
@@ -90,12 +143,110 @@ app.get('/api/movies/:id', async (req, res) => {
   }
 });
 
+// U
+app.put('/api/movies/:id', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const movieId = parseInt(req.params.id as string);
+    const { title, durationMinutes } = req.body;
+
+    if (!title || !durationMinutes) {
+      return res.status(400).json({ error: 'Podaj tytuł i czas trwania filmu.' });
+    }
+
+    const updatedMovie = await prisma.movie.update({
+      where: { id: movieId },
+      data: {
+        title,
+        durationMinutes: Number(durationMinutes),
+      },
+    });
+
+    res.json(updatedMovie);
+  } catch (error) {
+    console.error('Błąd aktualizacji filmu:', error);
+    res.status(500).json({ error: 'Nie udało się zaktualizować filmu.' });
+  }
+});
+
+// D
+app.delete('/api/movies/:id', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const movieId = parseInt(req.params.id as string);
+
+    await prisma.movie.delete({
+      where: { id: movieId },
+    });
+
+    res.json({ message: 'Film został usunięty.' });
+  } catch (error) {
+    console.error('Błąd usuwania filmu:', error);
+    res
+      .status(400)
+      .json({ error: 'Nie można usunąć filmu. Prawdopodobnie są do niego przypisane seanse.' });
+  }
+});
+
+// ----------- SCREENINGS -----------
+// C
+app.post('/api/screenings', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const { movieId, startTime, ticketPrice, roomName } = req.body;
+
+    if (!movieId || !startTime || !ticketPrice || !roomName) {
+      return res.status(400).json({ error: 'Podaj film, datę, cenę biletu i salę kinową.' });
+    }
+
+    const newScreening = await prisma.screening.create({
+      data: {
+        movieId: Number(movieId),
+        startTime: new Date(startTime),
+        ticketPrice: Number(ticketPrice),
+        roomName: String(roomName),
+      },
+      include: { movie: true },
+    });
+
+    res.status(201).json(newScreening);
+  } catch (error) {
+    console.error('Błąd dodawania seansu:', error);
+    res.status(500).json({ error: 'Nie udało się dodać seansu.' });
+  }
+});
+
+// R
+app.get('/api/screenings', async (_req, res) => {
+  try {
+    const screenings = await prisma.screening.findMany({
+      include: { movie: true },
+      orderBy: { startTime: 'asc' },
+    });
+    res.json(screenings);
+  } catch (error) {
+    console.error('Error fetching screenings:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
 app.get('/api/screenings/:id', async (req, res) => {
   try {
     const screeningId = parseInt(req.params.id);
     if (isNaN(screeningId)) {
       return res.status(400).json({ error: 'Wrong screening ID' });
     }
+
+    const expirationTime = new Date(Date.now() - 5 * 60 * 1000); // teraz - 5 minut
+
+    // usuwanie nieopłaconych rezerwacji
+    await prisma.seatReservation.deleteMany({
+      where: {
+        screeningId: screeningId,
+        status: 'LOCKED',
+        createdAt: {
+          lt: expirationTime,
+        },
+      },
+    });
+
     const screening = await prisma.screening.findUnique({
       where: { id: screeningId },
       include: {
@@ -116,6 +267,142 @@ app.get('/api/screenings/:id', async (req, res) => {
   }
 });
 
+// U
+app.put('/api/screenings/:id', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const screeningId = parseInt(req.params.id as string);
+    const { movieId, startTime, ticketPrice, roomName } = req.body;
+
+    if (!movieId || !startTime || !ticketPrice || !roomName) {
+      return res.status(400).json({ error: 'Podaj film, datę, cenę biletu i salę kinową.' });
+    }
+
+    const updatedScreening = await prisma.screening.update({
+      where: { id: screeningId },
+      data: {
+        movieId: Number(movieId),
+        startTime: new Date(startTime),
+        ticketPrice: Number(ticketPrice),
+        roomName: String(roomName),
+      },
+      include: { movie: true },
+    });
+
+    res.json(updatedScreening);
+  } catch (error) {
+    console.error('Błąd aktualizacji seansu:', error);
+    res.status(500).json({ error: 'Nie udało się zaktualizować seansu.' });
+  }
+});
+
+// D
+app.delete('/api/screenings/:id', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const screeningId = parseInt(req.params.id as string);
+
+    await prisma.screening.delete({
+      where: { id: screeningId },
+    });
+
+    res.json({ message: 'Seans został usunięty.' });
+  } catch (error) {
+    console.error('Błąd usuwania seansu:', error);
+    res.status(400).json({
+      error: 'Nie można usunąć seansu. Prawdopodobnie są do niego przypisane rezerwacje.',
+    });
+  }
+});
+
+// ----------- USERS -----------
+
+// R
+app.get('/api/users', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const users = await prisma.user.findMany({
+      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        role: true,
+        createdAt: true,
+        _count: {
+          select: { reservations: true },
+        },
+        reservations: {
+          orderBy: { createdAt: 'desc' },
+          select: {
+            id: true,
+            status: true,
+            ticketType: true,
+            createdAt: true,
+            screening: {
+              select: {
+                startTime: true,
+                ticketPrice: true,
+                movie: {
+                  select: { title: true },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+    res.json(users);
+  } catch (error) {
+    console.error('Błąd pobierania użytkowników:', error);
+    res.status(500).json({ error: 'Nie udało się pobrać listy użytkowników.' });
+  }
+});
+
+// U
+app.put('/api/users/:id/role', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const targetUserId = parseInt(req.params.id as string);
+    const { role } = req.body;
+
+    if (role !== 'USER' && role !== 'ADMIN') {
+      return res.status(400).json({ error: 'Nieprawidłowa rola.' });
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: { id: targetUserId },
+      data: { role },
+      select: { id: true, email: true, firstName: true, role: true },
+    });
+
+    res.json(updatedUser);
+  } catch (error) {
+    console.error('Błąd zmiany roli:', error);
+    res.status(500).json({ error: 'Nie udało się zmienić uprawnień.' });
+  }
+});
+
+// D
+app.delete('/api/users/:id', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const targetUserId = parseInt(req.params.id as string);
+
+    if ((req as any).user?.id === targetUserId) {
+      return res.status(400).json({ error: 'Nie możesz usunąć własnego konta.' });
+    }
+
+    await prisma.user.delete({
+      where: { id: targetUserId },
+    });
+
+    res.json({ message: 'Użytkownik został usunięty.' });
+  } catch (error) {
+    console.error('Błąd usuwania użytkownika:', error);
+    res.status(400).json({
+      error: 'Nie można usunąć użytkownika. Prawdopodobnie posiada rezerwacje w systemie.',
+    });
+  }
+});
+
+// ----------- RESERVATIONS -----------
+// C
 app.post('/api/reservations', authenticateToken, async (req: AuthRequest, res) => {
   try {
     const validation = reservationSchema.safeParse(req.body);
@@ -151,6 +438,56 @@ app.post('/api/reservations', authenticateToken, async (req: AuthRequest, res) =
     }
 
     res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// R
+app.get('/api/reservations', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const reservations = await prisma.seatReservation.findMany({
+      include: {
+        user: { select: { email: true, firstName: true } },
+        screening: {
+          include: { movie: { select: { title: true } } },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+    res.json(reservations);
+  } catch (error) {
+    res.status(500).json({ error: 'Nie udało się pobrać rezerwacji.' });
+  }
+});
+
+// U
+app.put('/api/reservations/:id', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const { status } = req.body;
+
+    if (!status || !['LOCKED', 'BOOKED'].includes(status)) {
+      return res.status(400).json({ error: 'Nieprawidłowy status.' });
+    }
+
+    const updated = await prisma.seatReservation.update({
+      where: { id: parseInt(req.params.id as string) },
+      data: { status },
+    });
+
+    res.json(updated);
+  } catch (error) {
+    res.status(400).json({ error: 'Nie udało się zaktualizować rezerwacji.' });
+  }
+});
+
+// D
+app.delete('/api/reservations/:id', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    await prisma.seatReservation.delete({
+      where: { id: parseInt(req.params.id as string) },
+    });
+    res.json({ message: 'Rezerwacja usunięta.' });
+  } catch (error) {
+    res.status(400).json({ error: 'Błąd usuwania rezerwacji.' });
   }
 });
 
@@ -227,17 +564,199 @@ app.post('/api/auth/login', async (req, res) => {
 
     const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '7d' });
 
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 dni w ms
+    });
+
     res.json({
-      token,
-      user: {
-        id: user.id,
-        email: user.email,
-        firstName: user.firstName,
-      },
+      user: { id: user.id, email: user.email, firstName: user.firstName, role: user.role },
     });
   } catch (error) {
     console.error('Login error:', error);
     res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+app.post('/api/auth/logout', (_req, res) => {
+  res.clearCookie('token');
+  res.json({ message: 'Wylogowano pomyślnie' });
+});
+
+app.get('/api/auth/me', authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: req.userId as number },
+      select: { id: true, email: true, firstName: true, role: true },
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    res.json(user);
+  } catch (error) {
+    console.error('Error fetching user:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+app.get('/api/auth/my-reservations', authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    const reservations = await prisma.seatReservation.findMany({
+      where: { userId: req.userId as number },
+      include: {
+        screening: {
+          include: {
+            movie: true,
+          },
+        },
+      },
+      orderBy: {
+        screening: {
+          startTime: 'desc',
+        },
+      },
+    });
+
+    res.json(reservations);
+  } catch (error) {
+    console.error('Error fetching user reservations:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+app.put('/api/auth/update-profile', authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    const validation = updateProfileSchema.safeParse(req.body);
+
+    if (!validation.success) {
+      return res.status(400).json({
+        error: 'Validation failed',
+        details: validation.error.issues.map((issue) => issue.message),
+      });
+    }
+
+    const { firstName, email, password } = validation.data;
+    const userId = req.userId as number;
+
+    const updateData: any = {};
+
+    if (firstName) updateData.firstName = firstName;
+
+    if (email) {
+      const existingUser = await prisma.user.findUnique({ where: { email } });
+      if (existingUser && existingUser.id !== userId) {
+        return res.status(409).json({ error: 'Email is already in use' });
+      }
+      updateData.email = email;
+    }
+
+    if (password) {
+      const saltRounds = 10;
+      updateData.passwordHash = await bcrypt.hash(password, saltRounds);
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: updateData,
+      select: { id: true, email: true, firstName: true },
+    });
+
+    res.json({
+      message: 'Profil zaktualizowany pomyślnie.',
+      user: updatedUser,
+    });
+  } catch (error) {
+    console.error('Error updating profile:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+app.patch('/api/reservations/:id/pay', authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    const validation = paymentSchema.safeParse({
+      reservationId: parseInt(req.params.id as string),
+    });
+
+    if (!validation.success) {
+      return res.status(400).json({
+        error: 'Validation failed',
+        details: validation.error.issues.map((issue) => issue.message),
+      });
+    }
+
+    const { reservationId } = validation.data;
+    const currentUserId = req.userId;
+
+    const reservation = await prisma.seatReservation.findUnique({
+      where: { id: reservationId },
+    });
+
+    if (!reservation) {
+      return res.status(404).json({ error: 'Reservation not found' });
+    }
+
+    if (reservation.userId !== currentUserId) {
+      return res.status(403).json({ error: 'You do not own this reservation' });
+    }
+
+    if (reservation.status === 'BOOKED') {
+      return res.status(400).json({ error: 'Reservation is already paid' });
+    }
+
+    const updatedReservation = await prisma.seatReservation.update({
+      where: { id: reservationId },
+      data: { status: 'BOOKED' },
+    });
+
+    res.json({ message: 'Payment successful', reservation: updatedReservation });
+  } catch (error) {
+    console.error('Error processing payment:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+app.get('/api/admin/stats', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const totalMovies = await prisma.movie.count();
+    const totalScreenings = await prisma.screening.count();
+    const totalUsers = await prisma.user.count();
+
+    const bookedReservations = await prisma.seatReservation.findMany({
+      where: { status: 'BOOKED' },
+      include: { screening: true },
+    });
+
+    let ticketsNormal = 0;
+    let ticketsStudent = 0;
+    let totalRevenue = 0;
+
+    bookedReservations.forEach((reservation) => {
+      const basePrice = reservation.screening.ticketPrice;
+
+      if (reservation.ticketType === 'STUDENT') {
+        ticketsStudent++;
+        totalRevenue += basePrice - 500;
+      } else {
+        ticketsNormal++;
+        totalRevenue += basePrice;
+      }
+    });
+
+    res.json({
+      totalMovies,
+      totalScreenings,
+      totalUsers,
+      totalRevenue,
+      ticketsNormal,
+      ticketsStudent,
+    });
+  } catch (error) {
+    console.error('Błąd pobierania statystyk:', error);
+    res.status(500).json({ error: 'Nie udało się pobrać statystyk bazy danych.' });
   }
 });
 

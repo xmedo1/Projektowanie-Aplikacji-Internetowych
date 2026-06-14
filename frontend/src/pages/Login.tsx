@@ -7,6 +7,8 @@ import Input from '../components/Input';
 import Button from '../components/Button';
 import api from '../services/api';
 import { isAxiosError } from 'axios';
+import { useAuth } from '../context/AuthContext';
+import { useNotification } from '../context/NotificationContext';
 
 const loginSchema = z.object({
   email: z.email({ error: 'Niepoprawny format e-maila' }),
@@ -18,6 +20,7 @@ type LoginFormInputs = z.infer<typeof loginSchema>;
 
 export default function Login() {
   const navigate = useNavigate();
+  const { showNotification } = useNotification();
 
   const {
     register,
@@ -27,19 +30,19 @@ export default function Login() {
     resolver: zodResolver(loginSchema),
   });
 
+  const { refreshUser } = useAuth();
+
   const onSubmit = async (data: LoginFormInputs) => {
     try {
-      const response = await api.post('/auth/login', data);
-      const { token } = response.data;
-
-      localStorage.setItem('token', token); // todo
-
-      navigate('/'); // todo
+      await api.post('/auth/login', data);
+      await refreshUser();
+      showNotification('Zalogowano pomyślnie');
+      navigate('/');
     } catch (error) {
       if (isAxiosError(error)) {
-        alert(error.response?.data?.message || 'Błąd logowania.');
+        showNotification(error.response?.data?.error || 'Błąd logowania.', 'error');
       } else {
-        alert('Wystąpił nieznany błąd.');
+        showNotification('Wystąpił nieznany błąd.', 'error');
       }
     }
   };
@@ -66,9 +69,9 @@ export default function Login() {
         <Button type="submit">Zaloguj się</Button>
       </form>
 
-      <p className="mt-6 text-center text-sm text-gray-400">
+      <p className="mt-6 text-center text-sm text-fg-muted">
         Nie masz jeszcze konta?{' '}
-        <Link to="/register" className="text-green-400 hover:underline">
+        <Link to="/register" className="text-accent hover:underline">
           Zarejestruj się
         </Link>
       </p>

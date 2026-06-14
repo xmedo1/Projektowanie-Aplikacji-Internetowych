@@ -7,6 +7,7 @@ import Input from '../components/Input';
 import Button from '../components/Button';
 import api from '../services/api';
 import { isAxiosError } from 'axios';
+import { useNotification } from '../context/NotificationContext';
 
 const registerSchema = z.object({
   email: z.email({ error: 'Niepoprawny format e-maila' }),
@@ -24,6 +25,7 @@ type RegisterFormInputs = z.infer<typeof registerSchema>;
 
 export default function Register() {
   const navigate = useNavigate();
+  const { showNotification } = useNotification();
 
   const {
     register,
@@ -35,17 +37,14 @@ export default function Register() {
 
   const onSubmit = async (data: RegisterFormInputs) => {
     try {
-      const response = await api.post('/auth/register', data);
-
-      console.log('Zarejestrowano pomyślnie:', response.data); // testy
-      alert('Konto stworzone pomyślnie! Teraz możesz się zalogować.');
-
+      await api.post('/auth/register', data);
+      showNotification('Konto stworzone pomyślnie! Teraz możesz się zalogować.');
       navigate('/login');
     } catch (error) {
       if (isAxiosError(error)) {
-        alert(error.response?.data?.message || 'Błąd rejestracji.');
+        showNotification(error.response?.data?.message || 'Błąd rejestracji.', 'error');
       } else {
-        alert('Wystąpił nieznany błąd.');
+        showNotification('Wystąpił nieznany błąd.', 'error');
       }
     }
   };
@@ -77,9 +76,9 @@ export default function Register() {
         <Button type="submit">Stwórz konto</Button>
       </form>
 
-      <p className="mt-6 text-center text-sm text-gray-400">
+      <p className="mt-6 text-center text-sm text-fg-muted">
         Masz już konto?{' '}
-        <Link to="/login" className="text-green-400 hover:underline">
+        <Link to="/login" className="text-accent hover:underline">
           Zaloguj się
         </Link>
       </p>

@@ -1,17 +1,37 @@
 @import 'tailwindcss';
 
 @theme {
-  /* Tła */
-  --color-page: #0f172a;
-  --color-card: #1e293b;
-  --color-input: #17202e;
-  /* Teksty */
-  --color-fg-default: #ffffff;
-  --color-fg-muted: #94a3b8;
-  --color-fg-on-accent: #0f172a;
+  --color-page: var(--theme-page);
+  --color-card: var(--theme-card);
+  --color-input: var(--theme-input);
+  --color-fg-default: var(--theme-fg-default);
+  --color-fg-muted: var(--theme-fg-muted);
+  --color-fg-on-accent: var(--theme-fg-on-accent);
+  --color-accent: var(--theme-accent);
+  --color-accent-hover: var(--theme-accent-hover);
+  --color-error: var(--theme-error);
+}
 
-  /* Akcenty i błędy */
-  --color-accent: #10b981;
-  --color-accent-hover: #059669;
-  --color-error: #ef4444;
+:root {
+  --theme-page: #f8fafc;
+  --theme-card: #ffffff;
+  --theme-input: #f1f5f9;
+  --theme-fg-default: #0f172a;
+  --theme-fg-muted: #64748b;
+  --theme-fg-on-accent: #ffffff;
+  --theme-accent: #4f46e5;
+  --theme-accent-hover: #4338ca;
+  --theme-error: #ef4444;
+}
+
+.dark {
+  --theme-page: #000000;
+  --theme-card: #171717;
+  --theme-input: #262626;
+  --theme-fg-default: #ffffff;
+  --theme-fg-muted: #a3a3a3;
+  --theme-fg-on-accent: #ffffff;
+  --theme-accent: #4f46e5;
+  --theme-accent-hover: #4338ca;
+  --theme-error: #ef4444;
 }
