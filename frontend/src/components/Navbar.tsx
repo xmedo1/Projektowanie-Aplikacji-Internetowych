@@ -36,6 +36,12 @@ export default function Navbar() {
                 </Link>
               </span>
               <div className="flex gap-3">
+                {user.role === 'ADMIN' && (
+                  <div className="hidden w-36 sm:block">
+                    <Button onClick={() => navigate('/admin')}>Panel Admina</Button>
+                  </div>
+                )}
+
                 <div className="w-28">
                   <Button onClick={() => navigate('/profile')}>Profil</Button>
                 </div>

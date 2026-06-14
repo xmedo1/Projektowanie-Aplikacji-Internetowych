@@ -10,6 +10,7 @@ import MovieDetails from './pages/MovieDetails';
 import Layout from './components/Layout';
 import { ThemeProvider } from './context/ThemeProvider';
 import { NotificationProvider } from './context/NotificationProvider';
+import AdminDashboard from './pages/AdminDashboard';
 
 function App() {
   return (
@@ -36,6 +37,14 @@ function App() {
                   element={
                     <ProtectedRoute>
                       <Reservation />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin"
+                  element={
+                    <ProtectedRoute>
+                      <AdminDashboard />
                     </ProtectedRoute>
                   }
                 />

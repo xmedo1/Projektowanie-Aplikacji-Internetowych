@@ -3,7 +3,7 @@ import cors from 'cors';
 import { prisma } from './db.js';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import { authenticateToken, AuthRequest } from './middleware/auth.js';
+import { authenticateToken, AuthRequest, requireAdmin } from './middleware/auth.js';
 import { z } from 'zod';
 import dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
@@ -417,6 +417,48 @@ app.patch('/api/reservations/:id/pay', authenticateToken, async (req: AuthReques
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
+
+app.get('/api/admin/stats', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const totalMovies = await prisma.movie.count();
+    const totalScreenings = await prisma.screening.count();
+    const totalUsers = await prisma.user.count();
+
+    const bookedReservations = await prisma.seatReservation.findMany({
+      where: { status: 'BOOKED' },
+      include: { screening: true },
+    });
+
+    let ticketsNormal = 0;
+    let ticketsStudent = 0;
+    let totalRevenue = 0;
+
+    bookedReservations.forEach((reservation) => {
+      const basePrice = reservation.screening.ticketPrice;
+
+      if (reservation.ticketType === 'STUDENT') {
+        ticketsStudent++;
+        totalRevenue += basePrice - 500;
+      } else {
+        ticketsNormal++;
+        totalRevenue += basePrice;
+      }
+    });
+
+    res.json({
+      totalMovies,
+      totalScreenings,
+      totalUsers,
+      totalRevenue,
+      ticketsNormal,
+      ticketsStudent,
+    });
+  } catch (error) {
+    console.error('Błąd pobierania statystyk:', error);
+    res.status(500).json({ error: 'Nie udało się pobrać statystyk bazy danych.' });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`API URL: http://localhost:${PORT}`);
 });

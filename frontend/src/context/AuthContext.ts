@@ -4,10 +4,12 @@ export interface User {
   id: number;
   email: string;
   firstName: string;
+  role: 'USER' | 'ADMIN';
 }
 
 export interface AuthContextType {
   user: User | null;
+  isAuthenticated: boolean;
   loading: boolean;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;

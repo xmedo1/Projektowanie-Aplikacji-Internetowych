@@ -3,10 +3,9 @@ import { prisma } from '../src/db.js';
 
 async function main() {
   console.log('Deleting old entries...');
-  await prisma.seatReservation.deleteMany();
-  await prisma.screening.deleteMany();
-  await prisma.movie.deleteMany();
-  await prisma.user.deleteMany();
+  await prisma.$executeRawUnsafe(`
+    TRUNCATE TABLE "SeatReservation", "Screening", "Movie", "User" RESTART IDENTITY CASCADE;
+  `);
 
   console.log('Creating demo entries in database.');
 

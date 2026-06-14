@@ -28,3 +28,27 @@ export interface TicketCardProps {
   reservation: Reservation;
   onRefresh: () => void;
 }
+
+export interface User {
+  id: number;
+  email: string;
+  firstName: string;
+  role: 'USER' | 'ADMIN';
+}
+
+export interface ActionCardProps {
+  title: string;
+  description: string;
+  buttonText: string;
+  buttonWidth?: string;
+  onClick: () => void;
+}
+
+export interface DashboardStats {
+  totalMovies: number;
+  totalScreenings: number;
+  totalUsers: number;
+  totalRevenue: number;
+  ticketsNormal: number;
+  ticketsStudent: number;
+}
