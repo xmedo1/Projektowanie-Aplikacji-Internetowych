@@ -14,6 +14,7 @@ import AdminDashboard from './pages/AdminDashboard';
 import AdminMovies from './pages/AdminMovies';
 import AdminScreenings from './pages/AdminScreenings';
 import AdminUsers from './pages/AdminUsers';
+import AdminReservations from './pages/AdminReservations';
 
 function App() {
   return (
@@ -72,6 +73,14 @@ function App() {
                   element={
                     <ProtectedRoute requireAdmin>
                       <AdminUsers />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/reservations"
+                  element={
+                    <ProtectedRoute requireAdmin>
+                      <AdminReservations />
                     </ProtectedRoute>
                   }
                 />

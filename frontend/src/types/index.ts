@@ -26,6 +26,11 @@ export interface Reservation {
   status: string;
   screening: Screening;
   createdAt: string;
+  userId: number;
+  user?: {
+    email: string;
+    firstName: string;
+  };
 }
 
 export interface TicketCardProps {

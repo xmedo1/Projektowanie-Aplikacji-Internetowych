@@ -401,6 +401,8 @@ app.delete('/api/users/:id', authenticateToken, requireAdmin, async (req, res) =
   }
 });
 
+// ----------- RESERVATIONS -----------
+// C
 app.post('/api/reservations', authenticateToken, async (req: AuthRequest, res) => {
   try {
     const validation = reservationSchema.safeParse(req.body);
@@ -436,6 +438,56 @@ app.post('/api/reservations', authenticateToken, async (req: AuthRequest, res) =
     }
 
     res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// R
+app.get('/api/reservations', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const reservations = await prisma.seatReservation.findMany({
+      include: {
+        user: { select: { email: true, firstName: true } },
+        screening: {
+          include: { movie: { select: { title: true } } },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+    res.json(reservations);
+  } catch (error) {
+    res.status(500).json({ error: 'Nie udało się pobrać rezerwacji.' });
+  }
+});
+
+// U
+app.put('/api/reservations/:id', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const { status } = req.body;
+
+    if (!status || !['LOCKED', 'BOOKED'].includes(status)) {
+      return res.status(400).json({ error: 'Nieprawidłowy status.' });
+    }
+
+    const updated = await prisma.seatReservation.update({
+      where: { id: parseInt(req.params.id as string) },
+      data: { status },
+    });
+
+    res.json(updated);
+  } catch (error) {
+    res.status(400).json({ error: 'Nie udało się zaktualizować rezerwacji.' });
+  }
+});
+
+// D
+app.delete('/api/reservations/:id', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    await prisma.seatReservation.delete({
+      where: { id: parseInt(req.params.id as string) },
+    });
+    res.json({ message: 'Rezerwacja usunięta.' });
+  } catch (error) {
+    res.status(400).json({ error: 'Błąd usuwania rezerwacji.' });
   }
 });
 
