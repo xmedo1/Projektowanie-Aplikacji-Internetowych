@@ -9,17 +9,20 @@ System rezerwacji miejsc w kinie. Użytkownikom umożliwia przegląd filmów ora
 - **Frontend:** React, Vite, TypeScript
 - **Infrastruktura:** Docker, Docker Compose z health-check
 
-Szczegółowy opis architektury znajduje się w pliku ADR.pdf
+Szczegółowy opis architektury znajduje się w pliku [ADR.pdf](https://github.com/xmedo1/Projektowanie-Aplikacji-Internetowych/blob/main/ADR.pdf)
 
 ## Instrukcja uruchomienia
 
 > [!IMPORTANT]  
-> Upewnij się, że masz zainstalowane Node.js, w wersji 20+ \
-> Docker, do uruchomienia bazy PostgreSQL
+> Upewnij się, że masz zainstalowane:
+> - Node.js, w wersji 20+ (dla uruchomienia lokalnego)
+> - Docker, do uruchomienia bazy PostgreSQL
 
 > [!NOTE]  
-> Pamiętaj o podmianie pliku `.env.example:`
+> Pamiętaj sklonowaniu repo i o podmianie pliku `.env.example:`
 > ```bash
+> git clone https://github.com/xmedo1/Projektowanie-Aplikacji-Internetowych
+> cd Projektowanie-Aplikacji-Internetowych/
 > cp .env.example .env
 > ```
 
