@@ -26,14 +26,12 @@ router.post('/register', async (req, res) => {
     const newUser = await prisma.user.create({
       data: { email, firstName, passwordHash: hashedPassword },
     });
-    res
-      .status(201)
-      .json({
-        id: newUser.id,
-        email: newUser.email,
-        firstName: newUser.firstName,
-        createdAt: newUser.createdAt,
-      });
+    res.status(201).json({
+      id: newUser.id,
+      email: newUser.email,
+      firstName: newUser.firstName,
+      createdAt: newUser.createdAt,
+    });
   } catch (error) {
     console.error('Registration error:', error);
     res.status(500).json({ error: 'Internal Server Error' });
