@@ -92,6 +92,16 @@ router.get('/me', authenticateToken, async (req: AuthRequest, res) => {
 
 router.get('/my-reservations', authenticateToken, async (req: AuthRequest, res) => {
   try {
+    const expirationTime = new Date(Date.now() - 5 * 60 * 1000);
+    await prisma.seatReservation.deleteMany({
+      where: {
+        userId: req.userId as number,
+        status: 'LOCKED',
+        createdAt: {
+          lt: expirationTime,
+        },
+      },
+    });
     const reservations = await prisma.seatReservation.findMany({
       where: { userId: req.userId as number },
       include: { screening: { include: { movie: true } } },
