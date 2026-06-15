@@ -420,7 +420,7 @@ export const swaggerDocument = {
         },
         responses: {
           200: { description: 'Profil zaktualizowany' },
-          400: { description: 'Nieprawidłowe dane'},
+          400: { description: 'Nieprawidłowe dane' },
           409: { description: 'Email już w użyciu' },
         },
       },
