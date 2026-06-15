@@ -8,6 +8,8 @@ import reservationsRouter from './routes/reservations.js';
 import authRouter from './routes/auth.js';
 import usersRouter from './routes/users.js';
 import statsRouter from './routes/stats.js';
+import swaggerUi from 'swagger-ui-express';
+import { swaggerDocument } from './swagger.js';
 
 const app = express();
 const PORT = 3000;
@@ -25,8 +27,9 @@ app.use(
 );
 app.use(express.json());
 app.use(cookieParser());
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
-app.get('/health', (_req, res) => {
+app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok' });
 });
 app.use('/api/movies', moviesRouter);
