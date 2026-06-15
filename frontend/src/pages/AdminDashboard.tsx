@@ -49,7 +49,7 @@ export default function AdminDashboard() {
         setStats(response.data);
       } catch (err) {
         console.error('Błąd pobierania statystyk:', err);
-        setError('Nie udało się załadować danych statystycznych.');
+        setError('Nie udało się załadować statystyk.');
       } finally {
         setLoadingStats(false);
       }
