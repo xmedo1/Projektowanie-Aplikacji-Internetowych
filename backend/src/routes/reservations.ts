@@ -94,6 +94,12 @@ router.patch('/:id/pay', authenticateToken, async (req: AuthRequest, res) => {
       return res.status(400).json({ error: 'Reservation is already paid' });
     }
 
+    const expirationTime = new Date(reservation.createdAt.getTime() + 5 * 60 * 1000);
+    if (new Date() > expirationTime) {
+      await prisma.seatReservation.delete({ where: { id: reservationId } });
+      return res.status(410).json({ error: 'Reservation has expired' });
+    }
+
     const updatedReservation = await prisma.seatReservation.update({
       where: { id: reservationId },
       data: { status: 'BOOKED' },
