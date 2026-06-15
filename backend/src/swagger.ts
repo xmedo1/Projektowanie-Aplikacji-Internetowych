@@ -58,7 +58,7 @@ export const swaggerDocument = {
           email: { type: 'string', format: 'email' },
           firstName: { type: 'string' },
           role: { type: 'string', enum: ['USER', 'ADMIN'] },
-          createdAt: { type: 'string', format: 'date-time' }
+          createdAt: { type: 'string', format: 'date-time' },
         },
       },
       Error: {
